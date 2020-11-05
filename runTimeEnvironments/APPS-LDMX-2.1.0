@@ -1,0 +1,19 @@
+# description: LDMX Sowtware [Singularity Image (standalone)] (v2.1.0)
+# param:SINGULARITY_OPTIONS:string::additional singularity options
+# param:SINGULARITY_IMAGE:string::path to singularity image location
+
+if [ "x$1" = "x0" ]; then
+  if [ -z "$SINGULARITY_IMAGE" ]; then
+    echo "ERROR: Singularity image is not defined."
+    exit 1
+  fi
+  joboption_args="/usr/bin/singularity exec $SINGULARITY_OPTIONS --home \"\${RUNTIME_JOB_DIR}\" \"${SINGULARITY_IMAGE}\" $joboption_args"
+  export ACCOUNTING_WN_INSTANCE="${SINGULARITY_IMAGE##*/}"
+elif [ "x$1" = "x1" ]; then
+  type singularity >/dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Singularity installation on the worker nodes is required to run LDMX software"
+    exit 1
+  fi
+fi
+

@@ -1,0 +1,12 @@
+&
+(executable="ldmxsim.sh")
+(inputFiles=("ldmxproduction.config" "")("ldmxjob.py" "")("ldmx-simprod-rte-helper.py" ""))
+(stdout="stdout.log")
+(stderr="stderr.log")
+(outputFiles=("rucio.metadata" ""))
+(jobName="LDMX Prod Simulation")
+(wallTime="3 hours")
+(memory="2048")
+(runTimeEnvironment="APPS/LDMX-2.1.0")
+(runTimeEnvironment="APPS/LDMX-SIMPROD-2.0")
+

@@ -1,0 +1,39 @@
+/persistency/gdml/read detector.gdml
+/ldmx/pw/enable 
+/ldmx/pw/read detectors/scoring_planes/detector.gdml
+/ldmx/biasing/enable
+/ldmx/biasing/particle gamma
+/ldmx/biasing/process photonNuclear
+/ldmx/biasing/volume target
+/ldmx/biasing/threshold 5000.0
+/run/initialize
+/ldmx/biasing/xsec/particle gamma
+/ldmx/biasing/xsec/threshold 5000.0
+/ldmx/biasing/xsec/factor 550
+/gun/particle e-
+/gun/energy 8 GeV
+/gun/position 0. 0. -.55 mm
+/gun/direction 0. 0. 8 GeV
+/ldmx/plugins/load EventPrintPlugin
+/ldmx/plugins/EventPrintPlugin/modulus 20000
+/ldmx/plugins/load TargetBremFilter libBiasing.so
+/ldmx/plugins/TargetBremFilter/volume target_PV
+/ldmx/plugins/TargetBremFilter/recoil_threshold 3000.0
+/ldmx/plugins/TargetBremFilter/brem_threshold 5000.0
+/ldmx/plugins/load TargetProcessFilter libBiasing.so
+/ldmx/plugins/load TrackFilterPlugin 
+/ldmx/plugins/TrackFilterPlugin/process photonNuclear true
+/ldmx/plugins/TrackFilterPlugin/region TargetRegion true 
+/ldmx/plugins/TrackFilterPlugin/create pnFilter
+/ldmx/generators/beamspot/enable
+/ldmx/generators/beamspot/sizeX 20.0
+/ldmx/generators/beamspot/sizeY 80.0
+/ldmx/persistency/root/dropCol MagnetScoringPlaneHits
+/ldmx/persistency/root/dropCol TrackerScoringPlaneHits
+/ldmx/persistency/root/dropCol HcalScoringPlaneHits
+/ldmx/persistency/root/verbose 0
+/ldmx/persistency/root/file simoutput.root
+/ldmx/persistency/root/runNumber ACT_PARAMRUN
+/random/setSeeds ACT_PARAMSEED1 ACT_PARAMSEED2
+/random/setSavingFlag 0
+/run/beamOn 1000000

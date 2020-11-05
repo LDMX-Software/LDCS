@@ -1,0 +1,14 @@
+# description: LDMX Production Simulation wrapper for aCT/Rucio
+# param:LDMX_STORAGE_BASE:string::local path to persistent storage base for LDMX data
+# param:KEEP_LOCAL_COPY:int::set to non-zero (suggest: 1) to keep a local copy of LDMX data (in local persistent storage)
+
+if [ "x$1" = "x0" ]; then
+  if [ -z "$LDMX_STORAGE_BASE" ]; then
+    echo "ERROR: ARC CE admin should define LDMX_STORAGE_BASE with arcctl rte params-set" >&2
+    exit 1
+  fi
+elif [ "x$1" = "x1" ]; then
+  export LDMX_STORAGE_BASE
+  export KEEP_LOCAL_COPY
+fi
+

@@ -33,7 +33,7 @@ Run with `bash /path/to/images/build_from_docker.sh vX.Y.Z`
 
 in the directory where you want the image to end up. (Maybe `images` is a sensible place for them -- feel free to keep them there. They are too big to reasonably add them to github though.) This pulls a docker image from dockerhub and builds a singularity image from it. It might take a few minutes. Then point to it in the new runtime environment:
 
-`arcctl rte params-set APPS-LDMX-X.Y.Z SINGULARITY_IMAGE /path/to/sigularityImage/beautiful-long-name-of-newly-created-singularity-image.sif`
+`arcctl rte params-set APPS-LDMX-X.Y.Z SINGULARITY_IMAGE /path/to/beautiful-long-name-of-newly-created-singularity-image.sif`
 
 For fun, double check the parameters:
 `arcctl rte params-get APPS-LDMX-X.Y.Z`

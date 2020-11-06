@@ -33,7 +33,7 @@ export SINGULARITY_CACHEDIR=${PWD}/.singularity
 mkdir -p ${SINGULARITY_CACHEDIR} #make sure cache directory exists
 
 G4tag="10.2.3_v0.4"
-ROOTtag="6.20.00"
+ROOTtag="6.22.00"
 ONNXtag="1.3.0"
 XERCEStag="3.2.3"
 UBUNTUtag="18.04"

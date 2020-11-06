@@ -13,7 +13,10 @@ This repo keeps:
 ### Run time environments
 
 Copy the runtime environment matching the release number: `runTimeEnvironments/APPS-LDMX-X.Y.Z`
-to where you keep them on your site, e.g. `cp runTimeEnvironments/APPS-LDMX-X.Y.Z /opt/arc-runtime/.`
+
+to where you keep them on your site, e.g. 
+
+`cp runTimeEnvironments/APPS-LDMX-X.Y.Z /opt/arc-runtime/.`
 
 Then enable it: `arcctl rte enable APPS/LDMX-X.Y.Z`
 
@@ -21,9 +24,11 @@ Then enable it: `arcctl rte enable APPS/LDMX-X.Y.Z`
 ### Image building
 
 Script: `images/build_from_docker.sh`
-Let's assume we have ldmx-sw release vX.Y.Z
 
-Run with `bash /path/to/build_from_docker.sh vX.Y.Z'
+Let's assume we have ldmx-sw release `vX.Y.Z`
+
+Run with `bash /path/to/build_from_docker.sh vX.Y.Z`
+
 in the directory where you want the image to end up. Then point to it in the new runtime environment:
 
 `arcctl rte params-set APPS-LDMX-X.Y.Z SINGULARITY_IMAGE /path/to/sigularityImage/beatiful-long-name-of-newly-created-singularity-image.sif`

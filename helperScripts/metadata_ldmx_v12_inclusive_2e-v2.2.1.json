@@ -1,0 +1,122 @@
+{
+    "passName": "v12",
+    "maxEvents": 100,
+    "maxTriesPerEvent": 1,
+    "run": 1,
+    "inputFiles": [],
+    "outputFiles": [
+        "simoutput.root"
+    ],
+    "sequence": [
+        {
+            "instanceName": "mySim",
+            "className": "ldmx::Simulator",
+            "generators": [
+                {
+                    "class_name": "ldmx::MultiParticleGunPrimaryGenerator",
+                    "instance_name": "mgpGen",
+                    "enablePoisson": false,
+                    "vertex": [
+                        -27.926,
+                        0.0,
+                        -700
+                    ],
+                    "momentum": [
+                        313.83638291137976,
+                        0.0,
+                        3987.669334932512
+                    ],
+                    "nParticles": 2,
+                    "pdgID": 11
+                }
+            ],
+            "detector": "/usr/local/data/detectors/ldmx-det-v12/detector.gdml",
+            "description": "Inclusive 4 GeV electron events, 2e",
+            "ecalHexReadout": {
+                "gap": 1.5,
+                "moduleMinR": 85.0,
+                "layerZPositions": [
+                    7.85,
+                    13.3,
+                    26.4,
+                    33.5,
+                    47.95,
+                    56.55,
+                    72.25,
+                    81.35,
+                    97.05,
+                    106.15,
+                    121.85,
+                    130.95,
+                    146.65,
+                    155.75,
+                    171.45,
+                    180.55,
+                    196.25,
+                    205.35,
+                    221.05,
+                    230.15,
+                    245.85,
+                    254.95,
+                    270.65,
+                    279.75,
+                    298.95,
+                    311.55,
+                    330.75,
+                    343.35,
+                    362.55,
+                    375.15,
+                    394.35,
+                    406.95,
+                    426.15,
+                    438.75
+                ],
+                "ecalFrontZ": 240.5,
+                "nCellRHeight": 35.3,
+                "verbose": 0
+            },
+            "scoringPlanes": "/usr/local/data/detectors/ldmx-det-v12/scoring_planes.gdml",
+            "randomSeeds": [
+                1,
+                2
+            ],
+            "beamSpotSmear": [
+                20.0,
+                80.0,
+                0
+            ],
+            "enableHitContribs": true,
+            "compressHitContribs": true,
+            "preInitCommands": [],
+            "postInitCommands": [],
+            "actions": [],
+            "logging_prefix": "",
+            "rootPrimaryGenUseSeed": false,
+            "validate_detector": false,
+            "verbosity": 0,
+            "biasing_enabled": false,
+            "biasing_process": "",
+            "biasing_volume": "",
+            "biasing_particle": "",
+            "biasing_all": true,
+            "biasing_incident": true,
+            "biasing_disableEMBiasing": false,
+            "biasing_threshold": 0.0,
+            "biasing_factor": 1,
+            "APrimeMass": 0.0,
+            "darkbrem_madgraphfilepath": "",
+            "darkbrem_method": 0,
+            "darkbrem_globalxsecfactor": 1.0
+        }
+    ],
+    "keep": [],
+    "skimDefaultIsKeep": true,
+    "skimRules": [],
+    "logFrequency": 5,
+    "termLogLevel": 1,
+    "fileLogLevel": 0,
+    "logFileName": "",
+    "compressionSetting": 9,
+    "histogramFile": "",
+    "conditionsObjectProviders": []
+}

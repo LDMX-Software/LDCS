@@ -1,6 +1,6 @@
 # description: LDMX Production Simulation wrapper for aCT/Rucio
 # param:LDMX_STORAGE_BASE:string::local path to persistent storage base for LDMX data
-# param:KEEP_LOCAL_COPY:int::set to non-zero (suggest: 1) to keep a local copy of LDMX data (in local persistent storage)
+# param:KEEP_LOCAL_COPY:string::set to non-zero (suggest: 1) to keep a local copy of LDMX data (in local persistent storage)
 
 if [ "x$1" = "x0" ]; then
   if [ -z "$LDMX_STORAGE_BASE" ]; then

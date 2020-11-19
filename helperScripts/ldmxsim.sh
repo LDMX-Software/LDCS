@@ -54,17 +54,21 @@ echo -e "\nSingularity exited normally, proceeding with post-processing...\n"
 
 # Post processing to extract metadata for rucio
 eval $( python ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config collect-metadata )
-if [ -z "$FINALOUTPUTFILE" ]; then
-  echo "Post-processing script failed!"
-  exit 1
-fi
+if [ ! -z "$KEEP_LOCAL_COPY" ]; then
+  if [ -z "$FINALOUTPUTFILE" ]; then
+    echo "Post-processing script failed!"
+    exit 1
+  fi
 
-echo "Copying $OUTPUTDATAFILE to $FINALOUTPUTFILE"
-mkdir -p "${FINALOUTPUTFILE%/*}"
-cp "$OUTPUTDATAFILE" "$FINALOUTPUTFILE"
-if [ $? -ne 0 ]; then
-  echo "Failed to copy output to final destination"
-  exit 1
+  echo "Copying $OUTPUTDATAFILE to $FINALOUTPUTFILE"
+  mkdir -p "${FINALOUTPUTFILE%/*}"
+  cp "$OUTPUTDATAFILE" "$FINALOUTPUTFILE"
+  if [ $? -ne 0 ]; then
+    echo "Failed to copy output to final destination"
+    exit 1
+  fi
+else
+  echo "KEEP_LOCAL_COPY is not set, not storing local copy of output"
 fi
 
 # Success

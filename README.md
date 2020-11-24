@@ -12,15 +12,51 @@ This repo keeps:
 
 ### Run time environments
 
+#### Setting up for a new ldmx-sw release/image
+
 Let's assume we have ldmx-sw release `vX.Y.Z`
 
 Copy the runtime environment matching the release number: `runTimeEnvironments/APPS-LDMX-X.Y.Z`
 
 to where you keep them on your site, e.g. 
 
-`cp runTimeEnvironments/APPS-LDMX-X.Y.Z /opt/arc-runtime/.`
+`cp runTimeEnvironments/APPS-LDMX-X.Y.Z /opt/arc-runtime/APPS/LDMX-X.Y.Z`
 
 Then enable it: `arcctl rte enable APPS/LDMX-X.Y.Z`
+
+
+##### Checking which RTEs are enabled
+`arcctl rte list`
+
+
+##### Checking the parameters
+`arcctl rte params-get APPS/LDMX-X.Y.Z`
+
+
+#### Setting up a new SIMPROD RTE:
+
+Copy the runtime environment you want: `runTimeEnvironments/APPS-LDMX-SIMPROD-x.y`
+
+to where you keep them on your site, e.g. 
+
+`cp runTimeEnvironments/APPS-LDMX-SIMPROD-x.y /opt/arc-runtime/APPS/LDMX-SIMPROD-x.y`
+
+**Note** that these are LDCS specific files, so version numbers are *independent* of `ldmx-sw` versions. 
+
+Then enable it: `arcctl rte enable APPS/LDMX-SIMPROD-x.y`
+
+
+##### Setting the local storage path 
+
+`arcctl rte params-set APPS/LDMX-SIMPROD-x.y LDMX_STORAGE_BASE /your/local/storage/path/`
+
+
+##### Opting to keep a local copy of job output (available from v3.0)
+`arcctl rte params-set APPS/LDMX-SIMPROD-x.y KEEP_LOCAL_COPY Y`
+
+
+##### Checking the parameters 
+`arcctl rte params-get APPS/LDMX-SIMPROD-x.y`
 
 
 ### Image building

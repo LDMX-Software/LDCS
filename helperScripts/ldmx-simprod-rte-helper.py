@@ -280,7 +280,7 @@ def collect_meta(conf_dict, json_file):
     set_remote_output(conf_dict, meta)
     if os.environ.get('KEEP_LOCAL_COPY'):
         data_location = os.environ['LDMX_STORAGE_BASE']
-        data_location += '/ldmx/mc-data/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+        data_location += '/ldmx/mc-data/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
         meta['local_replica'] = data_location
         if 'DataLocation' in meta:
             meta['DataLocation'] = ','.join([meta['DataLocation'], data_location])

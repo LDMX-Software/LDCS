@@ -357,7 +357,7 @@ def get_parser():
                         help='LDMX Production simulation macro-definition file template')
     parser.add_argument('-m', '--metaDump', action='store', default='parameterDump.json',
                         help='LDMX Production simulation parameter dump JSON file')
-    parser.add_argument('-i', '--inputMeta', action='store', default='inputMeta.json',
+    parser.add_argument('-i', '--inputMeta', action='store', default='', #'inputMeta.json',
                         help='Retrieved Rucio metadata JSON file (associated with job input file)')
     parser.add_argument('-j', '--json-metadata', action='store', default='rucio.metadata',
                         help='LDMX Production simulation JSON metadata file')

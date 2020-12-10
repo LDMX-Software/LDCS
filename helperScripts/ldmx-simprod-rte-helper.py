@@ -175,7 +175,7 @@ def collect_from_json( infile ):
             config_dict[procName+'Gain'] = seq['hgcroc']['gain']
             config_dict[procName+'ClockCycle[ns]'] = seq['hgcroc']['clockCycle']
             config_dict[procName+'Pedestal'] = seq['hgcroc']['pedestal']
-            config_dict[procName+'nADCs'] = seq['hgcroc']['nADCs']
+            config_dict[procName+'NumberADCs'] = seq['hgcroc']['nADCs']
             config_dict[procName+'MaxADCrange'] = seq['hgcroc']['maxADCRange']
             config_dict[procName+'NoiseRMS'] = seq['hgcroc']['noiseRMS']
             config_dict[procName+'TimingJitter'] = seq['hgcroc']['timingJitter']

@@ -303,6 +303,49 @@ def collect_meta(conf_dict, json_file):
 
     return meta
 
+def combine_meta( oldMetaFile, newMeta):
+    metaOut={}
+    #intialise all keys with values as pulled from the input file metadata
+    with open(oldMetaFile, 'r') as meta_f:
+        for contents in meta_f:
+            print  (contents )
+            contents=contents.replace("{","")
+            print  (contents )
+            contents=contents.replace("}","")
+            print  (contents )
+            #        print("Opened input metadata file")
+            #        metaOut = json.load( meta_f )
+            for line in contents.split(',') :
+#                print line
+                #            for line in contents[0]:
+                line=line.replace("\"", "")
+                line=line.replace(" ", "")
+                kv = line.split(':', 2)
+                if len(kv) != 2:
+                    logger.error('Malformed %s line: %s', oldMetaFile, line)
+                    continue
+                metaOut[kv[0]] = kv[1].strip()
+                print (kv[0])
+                print (metaOut[kv[0]])
+    print ("Old meta")
+    json.dumps( metaOut, indent = 2, sort_keys=True  )
+    print ("\n\n")
+    print ("New meta")
+    json.dumps( newMeta, indent = 2, sort_keys=True  )
+    print ("\n\n")
+
+    #overwrite anything that has been updated
+    for key in newMeta:
+        metaOut[key] = newMeta[key]
+        print (key+"   "+str(metaOut[key]))
+    print ("Combined meta")
+    json.dumps( metaOut, indent = 2, sort_keys=True  )
+    print ("\n\n")
+
+    return metaOut 
+    
+
+
 def get_parser():
     parser = argparse.ArgumentParser(description='LDMX Production Simulation Helper')
     parser.add_argument('-d', '--debug', action='store', default='INFO',
@@ -314,6 +357,8 @@ def get_parser():
                         help='LDMX Production simulation macro-definition file template')
     parser.add_argument('-m', '--metaDump', action='store', default='parameterDump.json',
                         help='LDMX Production simulation parameter dump JSON file')
+    parser.add_argument('-i', '--inputMeta', action='store', default='inputMeta.json',
+                        help='Retrieved Rucio metadata JSON file (associated with job input file)')
     parser.add_argument('-j', '--json-metadata', action='store', default='rucio.metadata',
                         help='LDMX Production simulation JSON metadata file')
     parser.add_argument('action', choices=['init', 'collect-metadata', 'test'],
@@ -332,7 +377,15 @@ if __name__ == '__main__':
 
     # metadata extraction from job parameter dump
     if cmd_args.action == 'test' :
-        collect_from_json( "parameterDump.json" )
+        meta = collect_from_json( cmd_args.metaDump ) #"parameterDump.json" )
+        if cmd_args.inputMeta :
+            print("Running combine_meta with "+cmd_args.inputMeta )
+            meta=combine_meta( cmd_args.inputMeta, meta )
+        #print result to screen 
+        json.dumps( meta, indent = 2, sort_keys=True )
+        with open(cmd_args.json_metadata, 'w') as meta_f:
+            json.dump( meta, meta_f, sort_keys=True )
+        
     elif cmd_args.action == 'init':
         # store job start time
         job_starttime()
@@ -342,6 +395,8 @@ if __name__ == '__main__':
         meta = collect_meta(conf_dict, cmd_args.metaDump)
         if 'local_replica' in meta:
             print('export FINALOUTPUTFILE="{local_replica}"'.format(**meta))
+        if cmd_args.inputMeta :
+            meta=combine_meta( inputMeta, meta )
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
 

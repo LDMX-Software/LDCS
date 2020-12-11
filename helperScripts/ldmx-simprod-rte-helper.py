@@ -215,6 +215,14 @@ def collect_from_json( infile ):
             config_dict[procName+'MeanNoiseSiPM'] = seq['mean_noise']
             config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']
             config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
+        elif seq['className'] == "ldmx::TrigScintClusterProducer" :
+            config_dict[procName+'MaxWidth'] = seq['max_cluster_width']
+            config_dict[procName+'SeedThreshold'] = seq['seed_threshold']
+            config_dict[procName+'MinThreshold'] = seq['clustering_threshold']
+        elif seq['className'] == "ldmx::TrigScintTrackProducer" :
+            config_dict[procName+'MaxDelta'] = seq['delta_max']
+            config_dict[procName+'SeedingCollection'] = seq['seeding_collection']
+            config_dict[procName+'MinThreshold'] = seq['tracking_threshold']
         elif seq['className'] == "ldmx::TrackerHitKiller" :
             config_dict[procName+'Efficiency'] = seq['hitEfficiency']
         elif seq['className'] == "ldmx::TriggerProcessor" :

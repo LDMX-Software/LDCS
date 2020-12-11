@@ -70,7 +70,7 @@ def calculate_md5_adler32_checksum(file, chunk_size=524288):
             adler32 = zlib.adler32(chunk, adler32) & 0xffffffff
     return (md5.hexdigest(), '{:08x}'.format(adler32))
 
-def collect_from_json( infile ):
+def collect_from_json( infile, in_conf ):
     #function to convert json nested list to flat metadata list 
     config_dict = {}
     try:
@@ -130,7 +130,7 @@ def collect_from_json( infile ):
     elif 'run' in mjson :
         config_dict['RunNumber'] = mjson['run']
     else :
-        logger.error('RunNumber is not set in %s. Job aborted.', infile)
+        logger.error('RunNumber is not sHexReadoutet in %s. Job aborted.', infile)
         sys.exit(1)
 
     if 'randomSeeds' in mjson['sequence'][0] :
@@ -234,6 +234,24 @@ def collect_from_json( infile ):
         elif seq['className'] == "ldmx::TrackerVetoProcessor" :
             config_dict[procName+'WasRun'] = 1
 
+    det = 'v{DetectorVersion}'.format(**in_conf)
+    for cond in mjson['conditionsObjectProviders'] :
+        if "RandomNumberSeedService" in cond['className'] :
+            config_dict['RandomNumberSeedMode'] = cond['seedMode']
+            config_dict['RandomNumberSeed'] = cond['seed']
+        elif "GeometryProvider" in cond['className'] :
+            print("Looking in "+cond['className'])
+            condName=cond['className']
+            condName=condName.replace("ldmx::", "")
+            condName=condName.replace("Provider", "HexReadout")
+            print("Using condName "+condName)
+
+            config_dict[condName+'Gap'] = cond['EcalHexReadout'][det]['gap']
+            config_dict[condName+'MinR'] = cond['EcalHexReadout'][det]['moduleMinR']
+            config_dict[condName+'FrontZ'] = cond['EcalHexReadout'][det]['ecalFrontZ']
+            config_dict[condName+'NumberCellRHeight'] = cond['EcalHexReadout'][det]['nCellRHeight']
+
+            
     config_dict['IsRecon'] = isRecon
     config_dict['IsTriggerSkim'] = isTriggerSkim
 
@@ -277,7 +295,8 @@ def set_remote_output(conf_dict, meta):
             pass
 
 def collect_meta(conf_dict, json_file):
-    meta = collect_from_json(json_file)
+
+    meta = collect_from_json(json_file, conf_dict)
 
     # conf
     meta['IsSimulation'] = True
@@ -295,6 +314,7 @@ def collect_meta(conf_dict, json_file):
     meta['ARCCEJobID'] = os.environ['GRID_GLOBAL_JOBID'].split('/')[-1] if 'GRID_GLOBAL_JOBID' in os.environ else None
     meta['FileCreationTime'] = int(time.time())
     meta['Walltime'] = meta['FileCreationTime'] - job_starttime()
+
 
     # Check output file actually exists
     if not os.path.exists(conf_dict.get('FileName', '')):
@@ -402,7 +422,7 @@ if __name__ == '__main__':
 
     # metadata extraction from job parameter dump
     if cmd_args.action == 'test' :
-        meta = collect_from_json( cmd_args.metaDump ) #"parameterDump.json" )
+        meta = collect_from_json( cmd_args.metaDump, conf_dict ) #"parameterDump.json" )
         if cmd_args.inputMeta :
             print("Running combine_meta with "+cmd_args.inputMeta )
             meta=combine_meta( cmd_args.inputMeta, meta )

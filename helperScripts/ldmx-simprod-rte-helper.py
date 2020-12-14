@@ -130,7 +130,7 @@ def collect_from_json( infile, in_conf ):
     elif 'run' in mjson :
         config_dict['RunNumber'] = mjson['run']
     else :
-        logger.error('RunNumber is not sHexReadoutet in %s. Job aborted.', infile)
+        logger.error('RunNumber is not set in %s. Job aborted.', infile)
         sys.exit(1)
 
     if 'randomSeeds' in mjson['sequence'][0] :
@@ -199,7 +199,7 @@ def collect_from_json( infile, in_conf ):
             config_dict[procName+'Layers'] = seq['num_ecal_layers']
             config_dict[procName+'DiscriminatorCut'] = seq['disc_cut']
             config_dict[procName+'BDTfile'] = seq['bdt_file']
-            config_dict[procName+'doBDT'] = seq['do_bdt']
+            config_dict[procName+'DoBDT'] = seq['do_bdt']
         elif seq['className'] == "ldmx::HcalVetoProcessor" :
             config_dict[procName+'MaxPE'] = seq['pe_threshold']
             config_dict[procName+'MaxTime[ns]'] = seq['max_time']
@@ -240,11 +240,11 @@ def collect_from_json( infile, in_conf ):
             config_dict['RandomNumberSeedMode'] = cond['seedMode']
             config_dict['RandomNumberSeed'] = cond['seed']
         elif "GeometryProvider" in cond['className'] :
-            print("Looking in "+cond['className'])
+            #print("Looking in "+cond['className'])
             condName=cond['className']
             condName=condName.replace("ldmx::", "")
             condName=condName.replace("Provider", "HexReadout")
-            print("Using condName "+condName)
+            #print("Using condName "+condName)
 
             config_dict[condName+'Gap'] = cond['EcalHexReadout'][det]['gap']
             config_dict[condName+'MinR'] = cond['EcalHexReadout'][det]['moduleMinR']

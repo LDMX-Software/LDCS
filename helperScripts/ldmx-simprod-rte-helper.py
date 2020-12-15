@@ -203,7 +203,7 @@ def collect_from_json( infile, in_conf ):
         elif seq['className'] == "ldmx::HcalVetoProcessor" :
             config_dict[procName+'MaxPE'] = seq['pe_threshold']
             config_dict[procName+'MaxTime[ns]'] = seq['max_time']
-            config_dict[procName+'MaxDepth[cm]'] = seq['max_depth']
+            config_dict[procName+'MaxDepth[mm]'] = seq['max_depth']
             config_dict[procName+'BackMinPE'] = seq['back_min_pe']
         elif seq['className'] == "ldmx::HcalDigiProducer" :
             config_dict[procName+'MeanNoiseSiPM'] = seq['meanNoise']
@@ -226,7 +226,7 @@ def collect_from_json( infile, in_conf ):
         elif seq['className'] == "ldmx::TrackerHitKiller" :
             config_dict[procName+'Efficiency'] = seq['hitEfficiency']
         elif seq['className'] == "ldmx::TriggerProcessor" :
-            config_dict[procName+'Threshold[MeV]'] = seq['threshold']
+            config_dict[procName+'MaxEnergy[MeV]'] = seq['threshold']
             config_dict[procName+'EcalEndLayer'] = seq['end_layer']
             config_dict[procName+'EcalStartLayer'] = seq['start_layer']
         elif seq['className'] == "ldmx::FindableTrackProcessor" :

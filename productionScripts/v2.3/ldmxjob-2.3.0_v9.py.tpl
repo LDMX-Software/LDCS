@@ -37,15 +37,15 @@ sim = simulator.simulator("mySim")
 #
 # Set the path to the detector to use. 
 #
-sim.setDetector( 'ldmx-det-v12', True  )
-sim.scoringPlanes = makeScoringPlanesPath('ldmx-det-v12')
+sim.setDetector( 'ldmx-det-v9', True  )
+sim.scoringPlanes = makeScoringPlanesPath('ldmx-det-v9')
 
 #
 # Set run parameters
 #
 p.run = RUNNUMBER
 sim.description = "8 GeV ECal photo-nuclear, xsec bias 550"
-sim.randomSeeds = [ SEED1 , SEED2 ]
+#sim.randomSeeds = [ SEED1 , SEED2 ]
 sim.beamSpotSmear = [20., 80., 0]
 
 #
@@ -88,7 +88,7 @@ trackerDQM=dqm.RecoilTrackerDQM()
 
 
 #p.sequence=[ sim, ecalDigi, ecalSim2Rec, ecalVeto, hcalDigis, hcalVeto, tsDigisTag, tsDigisUp, tsDigisDown, trackerHitKiller, simpleTrigger, findableTrack, trackerVeto, pnDQM, hcalDQM, trackerDQM ]
-p.sequence=[ sim, ecalDigi, ecalSim2Rec, ecalVeto, hcalDigis, hcalVeto, tsDigisTag, tsDigisUp, tsDigisDown, trackerHitKiller, simpleTrigger, findableTrack,  pnDQM, hcalDQM, trackerDQM ]
+p.sequence=[ sim, ecalDigi, ecalSim2Rec, ecalVeto, hcalDigis, hcalVeto, trackerHitKiller, simpleTrigger, findableTrack,  pnDQM, hcalDQM, trackerDQM ]
 #tracker veto still hardwired at 1.2 GeV and kills way too much, so it's becomes pointless to look at DQM if it's run 
 
 

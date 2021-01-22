@@ -18,6 +18,12 @@ cat ldmxproduction.config
 echo
 echo
 
+
+echo -e "ldmxjob.py:\n"
+cat ldmxjob.py
+echo
+echo
+
 # Check env vars are defined properly by RTE
 if [ -z "$LDMX_STORAGE_BASE" ]; then
   echo "ERROR: ARC CE admin should define LDMX_STORAGE_BASE with arcctl rte params-set"
@@ -53,7 +59,14 @@ fi
 echo -e "\nSingularity exited normally, proceeding with post-processing...\n"
 
 # Post processing to extract metadata for rucio
-eval $( python ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config collect-metadata )
+#try finding the input file metadata that should be copied to the node
+#inputMeta=$(ls metadata) 
+#inputMetaCmd=""
+#if [ "$inputMeta" != "" ] ; then
+#    inputMetaCmd="-i $inputMeta"
+#fi
+#eval $( python ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config $inputMetaCmd  collect-metadata )
+eval $( python ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config  collect-metadata )
 if [ ! -z "$KEEP_LOCAL_COPY" ]; then
   if [ -z "$FINALOUTPUTFILE" ]; then
     echo "Post-processing script failed!"

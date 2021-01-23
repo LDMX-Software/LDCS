@@ -236,7 +236,7 @@ def collect_from_json( infile, in_conf ):
             config_dict[procName+'WasRun'] = 1
 
     det = 'v{DetectorVersion}'.format(**in_conf)
-    for cond in mjson['conditionsObjectProviders'] :
+   for cond in mjson['conditionsObjectProviders'] :
         if "RandomNumberSeedService" in cond['className'] :
             config_dict['RandomNumberSeedMode'] = cond['seedMode']
             config_dict['RandomNumberSeed'] = cond['seed']
@@ -246,7 +246,7 @@ def collect_from_json( infile, in_conf ):
             condName=condName.replace("ldmx::", "")
             condName=condName.replace("Provider", "HexReadout")
             #print("Using condName "+condName)
-
+#
             config_dict[condName+'Gap'] = cond['EcalHexReadout'][det]['gap']
             config_dict[condName+'MinR'] = cond['EcalHexReadout'][det]['moduleMinR']
             config_dict[condName+'FrontZ'] = cond['EcalHexReadout'][det]['ecalFrontZ']
@@ -362,12 +362,14 @@ def combine_meta( oldMeta, newMeta):
 #    for key in oldMeta["inputMeta"][0]:
 #        metaOut[key] = oldMeta["inputMeta"][0][key]
 #
-
-    inputMeta= (json.loads(oldMeta)).get("inputMeta")
+#    inputMeta= (json.loads(oldMeta)).get("inputMeta")
+    inputMeta= json.loads(oldMeta)
 #    inputMeta= (oldMeta.json).get("inputMeta")
 #    metaOut=inputMeta.get("inputMeta")
 #    logger.info('This should be copied metadata:  {}'.format(metaOut))
-    logger.info('This should be copied metadata:  {}'.format(inputMeta))
+#    logger.info('This should be copied metadata:  {}'.format(inputMeta))
+    logger.info('This should be copied metadata: ')
+    json.dumps( inputMeta, indent = 2, sort_keys=True  )
 #    inputMeta.replace(" u'", "'")
 #    inputMeta.replace("{", "")
 #    inputMeta.replace("}", "")
@@ -375,10 +377,8 @@ def combine_meta( oldMeta, newMeta):
 #    for contents in inputMeta.get("inputMeta"):
 #        contents=contents.replace("{","")
 #        contents=contents.replace("}","")
-    for (key:val) in inputMeta : #.split(',') :
-#        newKey = key.replace(" u'", "'")
-#        metaOut[newKey] = inputMeta[key].replace(" u'", "'")
-        metaOut[key] = val #inputMeta[key]
+    for key in inputMeta : #.split(',') :
+        metaOut[key] = inputMeta[key]
 #            line=line.replace("\"", "")
 #            line=line.replace(" ", "")
 #            kv = line.split(':', 2)
@@ -386,7 +386,7 @@ def combine_meta( oldMeta, newMeta):
 #                logger.error('Malformed %s line: %s', oldMeta, line)
 #                continue
 #            metaOut[kv[0]] = kv[1].strip()
-
+        print( key+" :: "+metaOut[key] )
     logger.info('This should be the current job metadata:  {}'.format(newMeta))
 
     #overwrite anything that has been updated
@@ -394,7 +394,7 @@ def combine_meta( oldMeta, newMeta):
         metaOut[key] = newMeta[key]
 #        print (key+"   "+str(metaOut[key]))
 #    print ("Combined meta")
-    logger.info('Final metadata:')
+    logger.info('Final metadata:  {}'.format(metaOut))
     json.dumps( metaOut, indent = 2, sort_keys=True  )
 #    print ("\n\n")
 
@@ -478,7 +478,11 @@ if __name__ == '__main__':
         meta = collect_from_json( cmd_args.metaDump, conf_dict ) #"parameterDump.json" )
         if cmd_args.inputMeta :
             print("Running combine_meta with "+cmd_args.inputMeta )
-            meta=combine_meta_fromFile( cmd_args.inputMeta, meta )
+            with open(cmd_args.inputMeta, 'r') as meta_f :
+                inMeta=(json.load(meta_f)).get("inputMeta")
+#                meta=combine_meta( inMeta, meta )
+                meta=combine_meta( json.dumps(inMeta), meta )
+            #meta=combine_meta_fromFile( cmd_args.inputMeta, meta )
         #print result to screen 
         json.dumps( meta, indent = 2, sort_keys=True )
         with open(cmd_args.json_metadata, 'w') as meta_f:
@@ -499,7 +503,8 @@ if __name__ == '__main__':
 #            meta=combine_meta(inputMeta, meta )
 #            meta=combine_meta( conf_dict['InputMetadata'], meta )
 #            meta=combine_meta( json.loads(conf_dict.get('InputMetadata')), meta )
-            meta=combine_meta( conf_dict.get('InputMetadata'), meta )
+#            meta=combine_meta( conf_dict.get('InputMetadata'), meta )
+            meta=combine_meta( (conf_dict.get('InputMetadata')).get("inputMeta"), meta )
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
 

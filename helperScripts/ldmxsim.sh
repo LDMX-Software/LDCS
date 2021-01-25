@@ -19,10 +19,11 @@ echo
 echo
 
 
-echo -e "ldmxjob.py:\n"
+echo -e "ldmxjob.py:\n--------------------------\n "
 cat ldmxjob.py
+echo -e "--------------------------\n "echo
 echo
-echo
+
 
 # Check env vars are defined properly by RTE
 if [ -z "$LDMX_STORAGE_BASE" ]; then
@@ -59,13 +60,6 @@ fi
 echo -e "\nSingularity exited normally, proceeding with post-processing...\n"
 
 # Post processing to extract metadata for rucio
-#try finding the input file metadata that should be copied to the node
-#inputMeta=$(ls metadata) 
-#inputMetaCmd=""
-#if [ "$inputMeta" != "" ] ; then
-#    inputMetaCmd="-i $inputMeta"
-#fi
-#eval $( python ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config $inputMetaCmd  collect-metadata )
 eval $( python ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config  collect-metadata )
 if [ ! -z "$KEEP_LOCAL_COPY" ]; then
   if [ -z "$FINALOUTPUTFILE" ]; then

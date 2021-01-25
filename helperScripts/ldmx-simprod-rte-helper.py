@@ -99,7 +99,7 @@ def collect_from_json( infile, in_conf ):
             config_dict['MomentumVectorX'] = mjson['sequence'][0]['generators'][0]['momentum'][0] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
             config_dict['MomentumVectorY'] = mjson['sequence'][0]['generators'][0]['momentum'][1] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
             config_dict['MomentumVectorZ'] = mjson['sequence'][0]['generators'][0]['momentum'][2] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
-        if not config_dict['BeamEnergy'] :
+        if not config_dict['BeamEnergy'] :   #preferred choice is to extract the beam energy from the numbers used, rather than pull it from the batch config which doesn't explicitly set it, and could thus be wrong
             px = float( str(config_dict['MomentumVectorX']) )
             py = float( str(config_dict['MomentumVectorY']) )
             pz = float( str(config_dict['MomentumVectorZ']) )   #config_dict['MomentumVectorZ'])
@@ -150,16 +150,18 @@ def collect_from_json( infile, in_conf ):
                     keepKey=key+"_"+k+'[MeV]'
                     config_dict[keepKey]=val
 
-    config_dict['Geant4BiasParticle']  = mjson['sequence'][0]['biasing_particle'] if 'biasing_particle' in  mjson['sequence'][0] else None
-    config_dict['Geant4BiasProcess']   = mjson['sequence'][0]['biasing_process'] if 'biasing_process' in  mjson['sequence'][0] else None
-    config_dict['Geant4BiasVolume']    = mjson['sequence'][0]['biasing_volume'] if 'biasing_volume' in  mjson['sequence'][0] else None
-    config_dict['Geant4BiasThreshold[MeV]'] = mjson['sequence'][0]['biasing_threshold'] if 'biasing_threshold' in  mjson['sequence'][0] else None
-    config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
-    config_dict['APrimeMass']          = mjson['sequence'][0]['APrimeMass'] if 'APrimeMass' in  mjson['sequence'][0] else None
-    #let these depend on if we are actually generating signal 
-    config_dict['DarkBremMethod']      = mjson['sequence'][0]['darkbrem_method'] if  config_dict['APrimeMass']  and 'darkbrem_method' in  mjson['sequence'][0] else None
-    config_dict['DarkBremMethodXsecFactor'] = mjson['sequence'][0]['darkbrem_globalxsecfactor'] if config_dict['APrimeMass'] and 'darkbrem_globalxsecfactor' in  mjson['sequence'][0] else None
-
+    #don't attempt setting these if we're actually using a sim input file)
+    if not in_conf.get("InputFile") :
+        config_dict['Geant4BiasParticle']  = mjson['sequence'][0]['biasing_particle'] if 'biasing_particle' in  mjson['sequence'][0] else None
+        config_dict['Geant4BiasProcess']   = mjson['sequence'][0]['biasing_process'] if 'biasing_process' in  mjson['sequence'][0] else None
+        config_dict['Geant4BiasVolume']    = mjson['sequence'][0]['biasing_volume'] if 'biasing_volume' in  mjson['sequence'][0] else None
+        config_dict['Geant4BiasThreshold[MeV]'] = mjson['sequence'][0]['biasing_threshold'] if 'biasing_threshold' in  mjson['sequence'][0] else None
+        config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
+        config_dict['APrimeMass']          = mjson['sequence'][0]['APrimeMass'] if 'APrimeMass' in  mjson['sequence'][0] else None
+        #let these depend on if we are actually generating signal 
+        config_dict['DarkBremMethod']      = mjson['sequence'][0]['darkbrem_method'] if  config_dict['APrimeMass']  and 'darkbrem_method' in  mjson['sequence'][0] else None
+        config_dict['DarkBremMethodXsecFactor'] = mjson['sequence'][0]['darkbrem_globalxsecfactor'] if config_dict['APrimeMass'] and 'darkbrem_globalxsecfactor' in  mjson['sequence'][0] else None
+    
     #ok. over reco stuff, where parameter names can get confusing.
     # add here as more processors are included
     # not putting in protections here for every possible parameter name, better to let a test job fail if the parameter naming has changed
@@ -236,7 +238,7 @@ def collect_from_json( infile, in_conf ):
             config_dict[procName+'WasRun'] = 1
 
     det = 'v{DetectorVersion}'.format(**in_conf)
-   for cond in mjson['conditionsObjectProviders'] :
+    for cond in mjson['conditionsObjectProviders'] :
         if "RandomNumberSeedService" in cond['className'] :
             config_dict['RandomNumberSeedMode'] = cond['seedMode']
             config_dict['RandomNumberSeed'] = cond['seed']
@@ -353,50 +355,27 @@ def collect_meta(conf_dict, json_file):
     return meta
 
 def combine_meta( oldMeta, newMeta):
-    logger.info('This should be input metadata:  {}'.format(oldMeta))
-#    logger.info('This is elt 0:  {}'.format(oldMeta[0]))
-#    logger.info('This is elt 1:  {}'.format(oldMeta[1]))
-#    logger.info(json.dumps(oldMeta, indent = 2))
-    metaOut={} #oldMeta
+    # note: prinout level debug (here and below). default logger level is info, which hides this printout. 
+    logger.debug('This should be input metadata:  {}'.format(oldMeta))
+
+    metaOut={}
     #intialise all keys with values as pulled from the input file metadata
-#    for key in oldMeta["inputMeta"][0]:
-#        metaOut[key] = oldMeta["inputMeta"][0][key]
-#
-#    inputMeta= (json.loads(oldMeta)).get("inputMeta")
-    inputMeta= json.loads(oldMeta)
-#    inputMeta= (oldMeta.json).get("inputMeta")
-#    metaOut=inputMeta.get("inputMeta")
-#    logger.info('This should be copied metadata:  {}'.format(metaOut))
-#    logger.info('This should be copied metadata:  {}'.format(inputMeta))
-    logger.info('This should be copied metadata: ')
-    json.dumps( inputMeta, indent = 2, sort_keys=True  )
-#    inputMeta.replace(" u'", "'")
-#    inputMeta.replace("{", "")
-#    inputMeta.replace("}", "")
-#    for contents in inputMeta.get("inputMeta"):
-#    for contents in inputMeta.get("inputMeta"):
-#        contents=contents.replace("{","")
-#        contents=contents.replace("}","")
+    inputMeta= (json.loads(oldMeta)).get("inputMeta")
+    #    inputMeta= json.loads(oldMeta)
+
+    logger.debug('This should be copied metadata:  {}'.format(inputMeta))
+
     for key in inputMeta : #.split(',') :
         metaOut[key] = inputMeta[key]
-#            line=line.replace("\"", "")
-#            line=line.replace(" ", "")
-#            kv = line.split(':', 2)
-#            if len(kv) != 2:
-#                logger.error('Malformed %s line: %s', oldMeta, line)
-#                continue
-#            metaOut[kv[0]] = kv[1].strip()
-        print( key+" :: "+metaOut[key] )
-    logger.info('This should be the current job metadata:  {}'.format(newMeta))
+
+    logger.debug('This should be the current job metadata:  {}'.format(newMeta))
 
     #overwrite anything that has been updated
     for key in newMeta:
         metaOut[key] = newMeta[key]
-#        print (key+"   "+str(metaOut[key]))
-#    print ("Combined meta")
-    logger.info('Final metadata:  {}'.format(metaOut))
-    json.dumps( metaOut, indent = 2, sort_keys=True  )
-#    print ("\n\n")
+
+    logger.debug('Final metadata:  {}'.format(metaOut))
+
 
     return metaOut 
     
@@ -406,11 +385,8 @@ def combine_meta_fromFile( oldMetaFile, newMeta):
     #intialise all keys with values as pulled from the input file metadata
     with open(oldMetaFile, 'r') as meta_f:
         for contents in meta_f:
-            #print  (contents )
             contents=contents.replace("{","")
-            #print  (contents )
             contents=contents.replace("}","")
-            #print  (contents )
             #        print("Opened input metadata file")
             #        metaOut = json.load( meta_f )
             for line in contents.split(',') :
@@ -426,7 +402,7 @@ def combine_meta_fromFile( oldMetaFile, newMeta):
                 #print (kv[0])
                 #print (metaOut[kv[0]])
 #    print ("Old meta")
- #   json.dumps( metaOut, indent = 2, sort_keys=True  )
+#    json.dumps( metaOut, indent = 2, sort_keys=True  )
 #    print ("\n\n")
 #    print ("New meta")
 #    json.dumps( newMeta, indent = 2, sort_keys=True  )
@@ -473,16 +449,16 @@ if __name__ == '__main__':
     # config is parsed for any action
     conf_dict = parse_ldmx_config(cmd_args.config)
 
-    # metadata extraction from job parameter dump
+    # metadata extraction from job parameter dump: note, in local test mode, we pull input metadata from a file 
     if cmd_args.action == 'test' :
-        meta = collect_from_json( cmd_args.metaDump, conf_dict ) #"parameterDump.json" )
+        meta = collect_from_json( cmd_args.metaDump, conf_dict )
         if cmd_args.inputMeta :
             print("Running combine_meta with "+cmd_args.inputMeta )
             with open(cmd_args.inputMeta, 'r') as meta_f :
                 inMeta=(json.load(meta_f)).get("inputMeta")
-#                meta=combine_meta( inMeta, meta )
+#                meta=combine_meta( inMeta, meta ) # doesn't work! has to be passed as a dict
                 meta=combine_meta( json.dumps(inMeta), meta )
-            #meta=combine_meta_fromFile( cmd_args.inputMeta, meta )
+
         #print result to screen 
         json.dumps( meta, indent = 2, sort_keys=True )
         with open(cmd_args.json_metadata, 'w') as meta_f:
@@ -499,12 +475,11 @@ if __name__ == '__main__':
             print('export FINALOUTPUTFILE="{local_replica}"'.format(**meta))
 
         if 'InputMetadata' in conf_dict :
-#        if cmd_args.inputMeta :
-#            meta=combine_meta(inputMeta, meta )
-#            meta=combine_meta( conf_dict['InputMetadata'], meta )
-#            meta=combine_meta( json.loads(conf_dict.get('InputMetadata')), meta )
-#            meta=combine_meta( conf_dict.get('InputMetadata'), meta )
-            meta=combine_meta( (conf_dict.get('InputMetadata')).get("inputMeta"), meta )
+            #first, make sure to copy over the inut file name to the output meta data 
+            meta['InputFile'] = conf_dict.get('InputFile')
+            # combine the current job's metadata (meta) with the old one (inputMeta)
+            meta=combine_meta( conf_dict.get('InputMetadata'), meta )
+#            meta=combine_meta( (conf_dict.get('InputMetadata')).get("inputMeta"), meta )
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
 

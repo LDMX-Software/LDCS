@@ -297,6 +297,13 @@ def set_remote_output(conf_dict, meta):
         with open('output.files', 'w') as f:
             pass
 
+def get_local_copy(conf_dict):
+    fname='./'+conf_dict['InputFile'].split(":")[1]
+    fullPath=conf_dict['InputDataLocationLocal']
+    os.system('cp '+fullPath+' '+fname)
+    logger.info("Copied local input file to node")
+    return
+
 def collect_meta(conf_dict, json_file):
 
     meta = collect_from_json(json_file, conf_dict)
@@ -435,7 +442,7 @@ def get_parser():
                         help='Retrieved Rucio metadata JSON file (associated with job input file)')
     parser.add_argument('-j', '--json-metadata', action='store', default='rucio.metadata',
                         help='LDMX Production simulation JSON metadata file')
-    parser.add_argument('action', choices=['init', 'collect-metadata', 'test'],
+    parser.add_argument('action', choices=['init', 'copy-local', 'collect-metadata', 'test'],
                         help='Helper action to perform')
     return parser
 
@@ -463,19 +470,21 @@ if __name__ == '__main__':
         json.dumps( meta, indent = 2, sort_keys=True )
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump( meta, meta_f, sort_keys=True )
-        
     elif cmd_args.action == 'init':
         # store job start time
         job_starttime()
         # print values for bash eval
         print_eval(conf_dict)
+    elif cmd_args.action == 'copy-local':
+        if 'InputDataLocationLocalRSE' in conf_dict :
+            get_local_copy( conf_dict )
     elif cmd_args.action == 'collect-metadata':
         meta = collect_meta(conf_dict, cmd_args.metaDump)
         if 'local_replica' in meta:
             print('export FINALOUTPUTFILE="{local_replica}"'.format(**meta))
 
         if 'InputMetadata' in conf_dict :
-            #first, make sure to copy over the inut file name to the output meta data 
+            #first, make sure to copy over the input file name to the output meta data 
             meta['InputFile'] = conf_dict.get('InputFile')
             # combine the current job's metadata (meta) with the old one (inputMeta)
             meta=combine_meta( conf_dict.get('InputMetadata'), meta )

@@ -9,17 +9,28 @@
 #       bash build_from_docker.sh
 #   Specify a docker production container tag:
 #       bash build_from_docker.sh v2.0.0
+#   Specify a docker container tag from the dev repo:
+#       bash build_from_docker.sh latest "ldmx/dev"
 #
 # Author: Tom Eichlersmith, eichl008@umn.edu
 # Written: July, 2020
+# Edits and tweaks: Lene Kristian Bryngemark, Stanford University, lkbryng@stanford.edu
 ###############################################################################
 
 _docker_tag="latest"
 if [ -z "$1" ]
 then
-    echo "No tag provided, will use 'latest' tag."
+    echo "No tag provided, will use '${_docker_tag}' tag."
 else
     _docker_tag="$1"
+fi
+
+_docker_repo="ldmx/pro"
+if [ -z "$2" ]
+then
+    echo "No repo provided, will use '${_docker_repo}' repo."
+else
+    _docker_repo="$2"
 fi
 
 # the dependency versions are set in the docker container ldmx/dev
@@ -37,9 +48,13 @@ ROOTtag="6.22.00"
 ONNXtag="1.3.0"
 XERCEStag="3.2.3"
 UBUNTUtag="18.04"
-image="ldmx-${_docker_tag}-gLDMX.${G4tag}-r${ROOTtag}-onnx${ONNXtag}-xerces${XERCEStag}-ubuntu${UBUNTUtag}.sif"
-location="docker://ldmx/pro:${_docker_tag}"
+#remove the "owner" of the repo (like, ldmx) from the repo name used in image naming -- so it typically becomes 'pro'
+repoName="${_docker_repo##*/}"
+tagName="${repoName}_${_docker_tag}"
+image="ldmx-${tagName}-gLDMX.${G4tag}-r${ROOTtag}-onnx${ONNXtag}-xerces${XERCEStag}-ubuntu${UBUNTUtag}.sif"
+location="docker://${_docker_repo}:${_docker_tag}"
 echo "pulling from $location to build image $image"
+
 singularity build ${image} ${location}
 
 #singularity build \

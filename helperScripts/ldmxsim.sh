@@ -18,6 +18,13 @@ cat ldmxproduction.config
 echo
 echo
 
+
+echo -e "ldmxjob.py:\n--------------------------\n "
+cat ldmxjob.py
+echo -e "--------------------------\n "echo
+echo
+
+
 # Check env vars are defined properly by RTE
 if [ -z "$LDMX_STORAGE_BASE" ]; then
   echo "ERROR: ARC CE admin should define LDMX_STORAGE_BASE with arcctl rte params-set"
@@ -40,6 +47,10 @@ fi
 eval $( python ldmx-simprod-rte-helper.py -c ldmxproduction.config init )
 echo -e "Output data file is $OUTPUTDATAFILE\n"
 
+# Copy over local replica to the worker node (singularity can't see unmounted dirs like storage)
+eval $( python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local )
+
+
 # Start the simulation container
 echo -e "Starting Singularity image $SINGULARITY_IMAGE\n"
 singularity run $SINGULARITY_OPTIONS --home "$PWD" "$SINGULARITY_IMAGE" . ldmxjob.py
@@ -53,7 +64,7 @@ fi
 echo -e "\nSingularity exited normally, proceeding with post-processing...\n"
 
 # Post processing to extract metadata for rucio
-eval $( python ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config collect-metadata )
+eval $( python ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config  collect-metadata )
 if [ ! -z "$KEEP_LOCAL_COPY" ]; then
   if [ -z "$FINALOUTPUTFILE" ]; then
     echo "Post-processing script failed!"

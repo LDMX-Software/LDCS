@@ -56,7 +56,7 @@ Script: `images/build_from_docker.sh`
 
 Again let's assume we have ldmx-sw release `vX.Y.Z`
 
-Run with `bash /path/to/LDCS/images/build_from_docker.sh vX.Y.Z`
+Run with `bash /path/to/LDCS/images/build_from_docker.sh vX.Y.Z [optional: repo name]`
 
 in the directory where you want the image to end up. (Maybe `images` is a sensible place for them -- feel free to keep them there. They are too big to reasonably add them to github though.) This pulls a docker image from dockerhub and builds a singularity image from it. It might take a few minutes. Then point to it in the new runtime environment (after following RTE setup instructions above):
 

@@ -152,22 +152,17 @@ def collect_from_json( infile, in_conf ):
 
     #don't attempt setting these if we're actually using a sim input file)
     if not in_conf.get("InputFile") :
-        if 'biasing_particle' in  mjson['sequence'][0] :
-            config_dict['Geant4BiasParticle']  = mjson['sequence'][0]['biasing_particle'] if 'biasing_particle' in  mjson['sequence'][0] else None
-            config_dict['Geant4BiasProcess']   = mjson['sequence'][0]['biasing_process'] if 'biasing_process' in  mjson['sequence'][0] else None
-            config_dict['Geant4BiasVolume']    = mjson['sequence'][0]['biasing_volume'] if 'biasing_volume' in  mjson['sequence'][0] else None
-            config_dict['Geant4BiasThreshold[MeV]'] = mjson['sequence'][0]['biasing_threshold'] if 'biasing_threshold' in  mjson['sequence'][0] else None
-            config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
-        elif 'biasing_operators' in  mjson['sequence'][0] :
-            p = params['class_name']
-            key="Geant4Bias"+p.split("::")[-1]  #these can be long :: separated name spaces and class names; get the last
-            for k, val in params.iteritems() :
-                if '_name' in k :
-                    continue
-                keepKey=key+"_"+k
-                if 'threshold' in k or 'factor' in k :
-                    keepKey=keepKey+'[MeV]'
-                config_dict[keepKey]=val
+        if 'biasing_operators' in  mjson['sequence'][0] :
+            for params in mjson['sequence'][0]['biasing_operators'] :
+                p = params['class_name']
+                key="Geant4Bias"+p.split("::")[-1]  #these can be long :: separated name spaces and class names; get the last
+                for k, val in params.iteritems() :
+                    if '_name' in k :
+                        continue
+                    keepKey=key+"_"+k
+                    if 'threshold' in k or 'factor' in k :
+                        keepKey=keepKey+'[MeV]'
+                    config_dict[keepKey]=val
 
             config_dict['Geant4BiasParticle']  = mjson['sequence'][0]['biasing_particle'] if 'biasing_particle' in  mjson['sequence'][0] else None
             config_dict['Geant4BiasProcess']   = mjson['sequence'][0]['biasing_process'] if 'biasing_process' in  mjson['sequence'][0] else None
@@ -175,10 +170,18 @@ def collect_from_json( infile, in_conf ):
             config_dict['Geant4BiasThreshold[MeV]'] = mjson['sequence'][0]['biasing_threshold'] if 'biasing_threshold' in  mjson['sequence'][0] else None
             config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
 
+        elif 'biasing_particle' in  mjson['sequence'][0] :
+            config_dict['Geant4BiasParticle']  = mjson['sequence'][0]['biasing_particle'] if 'biasing_particle' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasProcess']   = mjson['sequence'][0]['biasing_process'] if 'biasing_process' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasVolume']    = mjson['sequence'][0]['biasing_volume'] if 'biasing_volume' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasThreshold[MeV]'] = mjson['sequence'][0]['biasing_threshold'] if 'biasing_threshold' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
             
         config_dict['APrimeMass']          = mjson['sequence'][0]['APrimeMass'] if 'APrimeMass' in  mjson['sequence'][0] else None
+        config_dict['APrimeMass']          = mjson['sequence'][0]['dark_brem']['ap_mass'] if 'dark_brem' in  mjson['sequence'][0] else None
             #let these depend on if we are actually generating signal 
         config_dict['DarkBremMethod']      = mjson['sequence'][0]['darkbrem_method'] if  config_dict['APrimeMass']  and 'darkbrem_method' in  mjson['sequence'][0] else None
+        config_dict['DarkBremModel']      = mjson['sequence'][0]['dark_brem']['model']['name'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None
         config_dict['DarkBremMethodXsecFactor'] = mjson['sequence'][0]['darkbrem_globalxsecfactor'] if config_dict['APrimeMass'] and 'darkbrem_globalxsecfactor' in  mjson['sequence'][0] else None
     
     #ok. over reco stuff, where parameter names can get confusing.

@@ -144,7 +144,7 @@ def collect_from_json( infile, in_conf ):
     if 'actions' in mjson['sequence'][0] :
         for params in mjson['sequence'][0]['actions'] :
             p = params['class_name']
-            key=p.split("::")[-1:]  #these can be long :: separated name spaces and class names; get the last 
+            key=p.split("::")[-1]  #these can be long :: separated name spaces and class names; get the last 
             for k, val in params.iteritems() :
                 if 'threshold' in k :
                     keepKey=key+"_"+k+'[MeV]'
@@ -160,7 +160,7 @@ def collect_from_json( infile, in_conf ):
             config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
         elif 'biasing_operators' in  mjson['sequence'][0] :
             p = params['class_name']
-            key="Geant4Bias"+p.split("::")[-1:]  #these can be long :: separated name spaces and class names; get the last
+            key="Geant4Bias"+p.split("::")[-1]  #these can be long :: separated name spaces and class names; get the last
             for k, val in params.iteritems() :
                 if '_name' in k :
                     continue

@@ -144,7 +144,7 @@ def collect_from_json( infile, in_conf ):
     if 'actions' in mjson['sequence'][0] :
         for params in mjson['sequence'][0]['actions'] :
             p = params['class_name']
-            key=p.replace("ldmx::", "")
+            key=p.split("::")[-1:]  #these can be long :: separated name spaces and class names; get the last 
             for k, val in params.iteritems() :
                 if 'threshold' in k :
                     keepKey=key+"_"+k+'[MeV]'
@@ -152,13 +152,32 @@ def collect_from_json( infile, in_conf ):
 
     #don't attempt setting these if we're actually using a sim input file)
     if not in_conf.get("InputFile") :
-        config_dict['Geant4BiasParticle']  = mjson['sequence'][0]['biasing_particle'] if 'biasing_particle' in  mjson['sequence'][0] else None
-        config_dict['Geant4BiasProcess']   = mjson['sequence'][0]['biasing_process'] if 'biasing_process' in  mjson['sequence'][0] else None
-        config_dict['Geant4BiasVolume']    = mjson['sequence'][0]['biasing_volume'] if 'biasing_volume' in  mjson['sequence'][0] else None
-        config_dict['Geant4BiasThreshold[MeV]'] = mjson['sequence'][0]['biasing_threshold'] if 'biasing_threshold' in  mjson['sequence'][0] else None
-        config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
+        if 'biasing_particle' in  mjson['sequence'][0] :
+            config_dict['Geant4BiasParticle']  = mjson['sequence'][0]['biasing_particle'] if 'biasing_particle' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasProcess']   = mjson['sequence'][0]['biasing_process'] if 'biasing_process' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasVolume']    = mjson['sequence'][0]['biasing_volume'] if 'biasing_volume' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasThreshold[MeV]'] = mjson['sequence'][0]['biasing_threshold'] if 'biasing_threshold' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
+        else if 'biasing_operators' in  mjson['sequence'][0] :
+            p = params['class_name']
+            key="Geant4Bias"+p.split("::")[-1:]  #these can be long :: separated name spaces and class names; get the last
+            for k, val in params.iteritems() :
+                if '_name' in k :
+                    continue
+                keepKey=key+"_"+k
+                if 'threshold' in k or 'factor' in k :
+                    keepKey=keepKey+'[MeV]'
+                config_dict[keepKey]=val
+
+            config_dict['Geant4BiasParticle']  = mjson['sequence'][0]['biasing_particle'] if 'biasing_particle' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasProcess']   = mjson['sequence'][0]['biasing_process'] if 'biasing_process' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasVolume']    = mjson['sequence'][0]['biasing_volume'] if 'biasing_volume' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasThreshold[MeV]'] = mjson['sequence'][0]['biasing_threshold'] if 'biasing_threshold' in  mjson['sequence'][0] else None
+            config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
+
+            
         config_dict['APrimeMass']          = mjson['sequence'][0]['APrimeMass'] if 'APrimeMass' in  mjson['sequence'][0] else None
-        #let these depend on if we are actually generating signal 
+            #let these depend on if we are actually generating signal 
         config_dict['DarkBremMethod']      = mjson['sequence'][0]['darkbrem_method'] if  config_dict['APrimeMass']  and 'darkbrem_method' in  mjson['sequence'][0] else None
         config_dict['DarkBremMethodXsecFactor'] = mjson['sequence'][0]['darkbrem_globalxsecfactor'] if config_dict['APrimeMass'] and 'darkbrem_globalxsecfactor' in  mjson['sequence'][0] else None
     
@@ -168,13 +187,13 @@ def collect_from_json( infile, in_conf ):
     isRecon = False 
     isTriggerSkim = False 
     for seq in mjson['sequence'] :
-        if seq['className'] != "ldmx::Simulator" :  #everything except simulation is reconstruction
+        procName=seq['className'].split('::')[1]  #remove namespace 
+        if procName != "Simulator" :  #everything except simulation is reconstruction
             isRecon = True 
-            procName=seq['className']
-            procName=procName.replace("ldmx::", "")
+#            procName=procName.replace("ldmx::", "")
             procName=procName.replace("Producer", "")
             procName=procName.replace("Processor", "")
-        if seq['className'] == "ldmx::EcalDigiProducer" :
+        if procName == "EcalDigiProducer" :
             config_dict[procName+'Gain'] = seq['hgcroc']['gain']
             config_dict[procName+'ClockCycle[ns]'] = seq['hgcroc']['clockCycle']
             config_dict[procName+'Pedestal'] = seq['hgcroc']['pedestal']
@@ -193,48 +212,48 @@ def collect_from_json( infile, in_conf ):
             config_dict[procName+'TimeDnSlope'] = seq['hgcroc']['timeDnSlope']
             config_dict[procName+'TimePeak'] = seq['hgcroc']['timePeak']
             config_dict[procName+'DrainRate'] = seq['hgcroc']['drainRate']
-        elif seq['className'] == "ldmx::EcalRecProducer" :
+        elif procName == "EcalRecProducer" :
             config_dict[procName+'SecondOrderEnergyCorrection'] = seq['secondOrderEnergyCorrection']
             config_dict[procName+'ChargePerMIP'] = seq['charge_per_mip']
             config_dict[procName+'SiEnergyMIP'] = seq['mip_si_energy']
             config_dict[procName+'ClockCycle[ns]'] = seq['clock_cycle']
-        elif seq['className'] == "ldmx::EcalVetoProcessor" :
+        elif procName == "EcalVetoProcessor" :
             config_dict[procName+'Layers'] = seq['num_ecal_layers']
             config_dict[procName+'DiscriminatorCut'] = seq['disc_cut']
             config_dict[procName+'BDTfile'] = seq['bdt_file']
             config_dict[procName+'DoBDT'] = seq['do_bdt']
-        elif seq['className'] == "ldmx::HcalVetoProcessor" :
+        elif procName == "HcalVetoProcessor" :
             config_dict[procName+'MaxPE'] = seq['pe_threshold']
             config_dict[procName+'MaxTime[ns]'] = seq['max_time']
             config_dict[procName+'MaxDepth[mm]'] = seq['max_depth']
             config_dict[procName+'BackMinPE'] = seq['back_min_pe']
-        elif seq['className'] == "ldmx::HcalDigiProducer" :
+        elif procName == "HcalDigiProducer" :
             config_dict[procName+'MeanNoiseSiPM'] = seq['meanNoise']
             config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']
             config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
             config_dict[procName+'AttLength[m]'] = seq['strip_attenuation_length']
             config_dict[procName+'PosResolution[mm]'] = seq['strip_position_resolution']
-        elif seq['className'] == "ldmx::TrigScintDigiProducer" :
+        elif procName == "TrigScintDigiProducer" :
             config_dict[procName+'MeanNoiseSiPM'] = seq['mean_noise']
             config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']
             config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
-        elif seq['className'] == "ldmx::TrigScintClusterProducer" :
+        elif procName == "TrigScintClusterProducer" :
             config_dict[procName+'MaxWidth'] = seq['max_cluster_width']
             config_dict[procName+'SeedThreshold'] = seq['seed_threshold']
             config_dict[procName+'MinThreshold'] = seq['clustering_threshold']
-        elif seq['className'] == "ldmx::TrigScintTrackProducer" :
+        elif procName == "TrigScintTrackProducer" :
             config_dict[procName+'MaxDelta'] = seq['delta_max']
             config_dict[procName+'SeedingCollection'] = seq['seeding_collection']
             config_dict[procName+'MinThreshold'] = seq['tracking_threshold']
-        elif seq['className'] == "ldmx::TrackerHitKiller" :
+        elif procName == "TrackerHitKiller" :
             config_dict[procName+'Efficiency'] = seq['hitEfficiency']
-        elif seq['className'] == "ldmx::TriggerProcessor" :
+        elif procName == "TriggerProcessor" :
             config_dict[procName+'MaxEnergy[MeV]'] = seq['threshold']
             config_dict[procName+'EcalEndLayer'] = seq['end_layer']
             config_dict[procName+'EcalStartLayer'] = seq['start_layer']
-        elif seq['className'] == "ldmx::FindableTrackProcessor" :
+        elif procName == "FindableTrackProcessor" :
             config_dict[procName+'WasRun'] = 1
-        elif seq['className'] == "ldmx::TrackerVetoProcessor" :
+        elif procName == "TrackerVetoProcessor" :
             config_dict[procName+'WasRun'] = 1
 
     det = 'v{DetectorVersion}'.format(**in_conf)
@@ -244,8 +263,8 @@ def collect_from_json( infile, in_conf ):
             config_dict['RandomNumberSeed'] = cond['seed']
         elif "GeometryProvider" in cond['className'] :
             #print("Looking in "+cond['className'])
-            condName=cond['className']
-            condName=condName.replace("ldmx::", "")
+            condName=cond['className'].split("::")[1]
+#            condName=condName.replace("ldmx::", "")
             condName=condName.replace("Provider", "HexReadout")
             #print("Using condName "+condName)
 #

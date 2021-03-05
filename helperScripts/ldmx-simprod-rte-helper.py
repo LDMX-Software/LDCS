@@ -158,7 +158,7 @@ def collect_from_json( infile, in_conf ):
             config_dict['Geant4BiasVolume']    = mjson['sequence'][0]['biasing_volume'] if 'biasing_volume' in  mjson['sequence'][0] else None
             config_dict['Geant4BiasThreshold[MeV]'] = mjson['sequence'][0]['biasing_threshold'] if 'biasing_threshold' in  mjson['sequence'][0] else None
             config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
-        else if 'biasing_operators' in  mjson['sequence'][0] :
+        elif 'biasing_operators' in  mjson['sequence'][0] :
             p = params['class_name']
             key="Geant4Bias"+p.split("::")[-1:]  #these can be long :: separated name spaces and class names; get the last
             for k, val in params.iteritems() :

@@ -321,6 +321,14 @@ def get_local_copy(conf_dict):
     logger.info("Copied local input file to node")
     return
 
+def get_pileup_file(conf_dict):
+    fname='./'+conf_dict['PileupFile'].split(":")[1]
+    fullPath=conf_dict['PileupLocationLocal']
+    os.system('cp '+fullPath+' '+fname)
+    logger.info("Copied pileup file to node")
+    return
+
+
 def collect_meta(conf_dict, json_file):
 
     meta = collect_from_json(json_file, conf_dict)
@@ -495,6 +503,9 @@ if __name__ == '__main__':
     elif cmd_args.action == 'copy-local':
         if 'InputDataLocationLocalRSE' in conf_dict :
             get_local_copy( conf_dict )
+        if 'PileupLocationLocal' in conf_dict :
+            get_pileup_file( conf_dict )
+    
     elif cmd_args.action == 'collect-metadata':
         meta = collect_meta(conf_dict, cmd_args.metaDump)
         if 'local_replica' in meta:

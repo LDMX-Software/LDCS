@@ -322,7 +322,7 @@ def get_local_copy(conf_dict):
     return
 
 def get_pileup_file(conf_dict):
-    fname='./'+conf_dict['PileupFile'].split(":")[1]
+    fname=conf_dict['PileupFile'].split(":")[1]
     fullPath=conf_dict['PileupLocationLocal']
     os.system('cp '+fullPath+' '+fname)
     logger.info("Copied pileup file to node")

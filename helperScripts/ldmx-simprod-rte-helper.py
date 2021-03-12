@@ -277,7 +277,7 @@ def collect_from_json( infile, in_conf ):
 
     config_dict['ROOTCompressionSetting'] = mjson['compressionSetting'] if 'compressionSetting' in mjson else None 
 
-    if 'maxEvents' in mjson :
+    if 'maxEvents' in mjson and mjson['maxEvents'] > -1 :
         config_dict['NumberOfEvents'] = mjson['maxEvents']
         #othersise we are most definitely using an input file and the number from there should be kept 
 

@@ -48,7 +48,7 @@ eval $( python ldmx-simprod-rte-helper.py -c ldmxproduction.config init )
 echo -e "Output data file is $OUTPUTDATAFILE\n"
 
 # Copy over local replica to the worker node (singularity can't see unmounted dirs like storage)
-eval $( python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local )
+python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
 
 
 # Start the simulation container

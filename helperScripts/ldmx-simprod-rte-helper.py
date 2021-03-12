@@ -507,13 +507,18 @@ if __name__ == '__main__':
     elif cmd_args.action == 'copy-local':
         if 'InputDataLocationLocalRSE' in conf_dict :
             get_local_copy( conf_dict )
-        if 'PileupLocationLocal' in conf_dict :
-            get_pileup_file( conf_dict )
+# turns out this is not needed
+#        if 'PileupLocationLocal' in conf_dict :
+#            get_pileup_file( conf_dict )
     
     elif cmd_args.action == 'collect-metadata':
         meta = collect_meta(conf_dict, cmd_args.metaDump)
         if 'local_replica' in meta:
             print('export FINALOUTPUTFILE="{local_replica}"'.format(**meta))
+
+        if 'PileupFile' in conf_dict :
+            #pull the pileup file name from the job meta
+            meta['PileupFile'] = conf_dict.get('PileupFile')
 
         if 'InputMetadata' in conf_dict :
             #first, make sure to copy over the input file name to the output meta data 

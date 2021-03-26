@@ -15,6 +15,8 @@ p=ldmxcfg.Process("tskim")
 #import LDMX.Ecal.EcalGeometry
 #import LDMX.Ecal.ecal_hardcoded_conditions
 
+from LDMX.EventProc.simpleTrigger import simpleTrigger
+
 
 #
 # Set run parameters
@@ -28,9 +30,9 @@ p.run = RUNNUMBER
 # Configure the sequence in which user actions should be called.
 #
 
+p.skimDefaultIsDrop()
+p.skimConsider("simpleTrigger")
 
-p.skimDefaultIsKeep=False
-p.skimRules=[ "simpleTrigger" ]
 #p.keep = [ "drop MagnetScoringPlaneHits", "drop TrackerScoringPlaneHits", "drop HcalScoringPlaneHits"]
 
 #add these to do something apart from just skimming
@@ -39,7 +41,7 @@ from LDMX.TrigScint.trigScint import trigScintTrack
 
 trigScintTrack.delta_max = 0.75
 
-p.sequence=[  TrigScintClusterProducer.tagger(),TrigScintClusterProducer.up(), TrigScintClusterProducer.down(), trigScintTrack ]
+p.sequence=[  simpleTrigger ] #TrigScintClusterProducer.tagger(),TrigScintClusterProducer.up(), TrigScintClusterProducer.down(), trigScintTrack ]
 
 p.outputFiles=["simoutput.root"]
 

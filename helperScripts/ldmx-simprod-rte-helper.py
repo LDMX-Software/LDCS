@@ -184,6 +184,13 @@ def collect_from_json( infile, in_conf ):
     # not putting in protections here for every possible parameter name, better to let a test job fail if the parameter naming has changed
     isRecon = False 
     isTriggerSkim = False 
+    if in_conf.get("IsTriggerSkim") :
+        if in_conf.get("IsTriggerSkim") == "Yes" :
+            isTriggerSkim=True
+    if in_conf.get("IsBDTSkim") :
+        if in_conf.get("IsBDTSkim") == "Yes" :
+            isBDTSkim=True
+            
     for seq in mjson['sequence'] :
         procName=seq['className'].split('::')[1]  #remove namespace 
         if procName != "Simulator" :  #everything except simulation is reconstruction
@@ -274,6 +281,7 @@ def collect_from_json( infile, in_conf ):
             
     config_dict['IsRecon'] = isRecon
     config_dict['IsTriggerSkim'] = isTriggerSkim
+    config_dict['IsBDTSkim'] = isBDTSkim
 
     config_dict['ROOTCompressionSetting'] = mjson['compressionSetting'] if 'compressionSetting' in mjson else None 
 

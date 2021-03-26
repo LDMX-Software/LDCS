@@ -184,6 +184,7 @@ def collect_from_json( infile, in_conf ):
     # not putting in protections here for every possible parameter name, better to let a test job fail if the parameter naming has changed
     isRecon = False 
     isTriggerSkim = False 
+    isBDTSkim = False 
     if in_conf.get("IsTriggerSkim") :
         if in_conf.get("IsTriggerSkim") == "Yes" :
             isTriggerSkim=True

@@ -1,0 +1,15 @@
+# description: LDMX Software [Singularity Image (standalone)] (version for LHE file generation with MadGraph)
+# param:SINGULARITY_OPTIONS:string::additional singularity options
+# param:SINGULARITY_IMAGE:string::path to singularity image location
+
+if [ "x$1" = "x0" ]; then
+  if [ -z "$SINGULARITY_IMAGE" ]; then
+    echo "ERROR: Singularity image is not defined."
+    exit 1
+  fi
+  export ACCOUNTING_WN_INSTANCE="${SINGULARITY_IMAGE##*/}"
+elif [ "x$1" = "x1" ]; then
+  export SINGULARITY_IMAGE
+  export SINGULARITY_OPTIONS
+fi
+

@@ -42,15 +42,17 @@ cd ${startDir}
 
 if [ ${imageBuildReturn} -ne 0 ] ; then
 	echo "Image building unsuccessful."
-	if [ "${FULLIMAGEPATH}" =  '.' ] && [ -f ${FULLIMAGEPATH} ] ; then
+	if [ "${FULLIMAGEPATH}" !=  '.' ] && [ -f ${FULLIMAGEPATH} ] ; then
 		echo "Continuing setup with previously successfully built image ${FULLIMAGEPATH}."
 	else
 		echo -e "Error: singularity image ${FULLIMAGEPATH} not found! RTE not enabled."
 		exit $imageBuildReturn
 	fi
+else 
+echo "Using successfully built image at path ${FULLIMAGEPATH}"
 fi
 
 cp ${LDCSPATH}/runTimeEnvironments/${RTEname} ${RTEPATH}/APPS/.
-sudo arcctl rte params-set ${RTEPATH}/APPS/${RTEname} SINGULARITY_IMAGE ${FULLIMAGEPATH}
-sudo arcctl rte enable ${RTEPATH}/APPS/${RTEname}
+arcctl rte params-set ${RTEPATH}/APPS/${RTEname} SINGULARITY_IMAGE ${FULLIMAGEPATH}
+arcctl rte enable ${RTEPATH}/APPS/${RTEname}
 

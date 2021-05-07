@@ -57,14 +57,11 @@ echo "pulling from $location to build image $image"
 
 singularity build ${image} ${location}
 
-#singularity build \
-#    ldmx-${_docker_tag}-gLDMX.10.2.3_v0.3-r6.20.00-onnx1.3.0-xerces3.2.3-ubuntu18.04.sif \
-#    docker://ldmx/pro:${_docker_tag}
-
 RETURN=$?
 if [ $RETURN -ne 0 ] ; then 
    echo "Image building returned exit code $RETURN!"
    exit $RETURN
 fi
-   
-export FULLIMAGEPATH="${PWD}/${image}"
+
+FULLIMAGEPATH="${PWD}/${image}"
+export $FULLIMAGEPATH

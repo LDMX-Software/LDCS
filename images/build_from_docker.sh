@@ -62,7 +62,7 @@ singularity build ${image} ${location}
 #    docker://ldmx/pro:${_docker_tag}
 
 RETURN=$?
-if [[ $RETURN -ne 0 ]]
+if [ $RETURN -ne 0 ]
    echo "Image building returned exit code $RETURN!"
    exit $RETURN
 fi

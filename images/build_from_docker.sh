@@ -63,5 +63,4 @@ if [ $RETURN -ne 0 ] ; then
    exit $RETURN
 fi
 
-FULLIMAGEPATH="${PWD}/${image}"
-export $FULLIMAGEPATH
+export FULLIMAGEPATH="${PWD}/${image}"

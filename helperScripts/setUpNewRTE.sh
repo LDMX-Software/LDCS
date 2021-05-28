@@ -35,18 +35,24 @@ git fetch && git pull origin master
 
 
 cd $IMAGEPATH
-bash $LDCSPATH/images/build_from_docker.sh ${swTag} ${swRepo}
+#eval $(bash $LDCSPATH/images/build_from_docker.sh ${swTag} ${swRepo}) | tee
+source $LDCSPATH/images/build_from_docker.sh ${swTag} ${swRepo}
 imageBuildReturn=$?
+echo "building returned $imageBuildReturn"
 
 cd ${startDir}
+
+if [ -f $LDCSPATH/images/imagePath ] ; then
+    source $LDCSPATH/images/imagePath
+fi
 
 if [ ${imageBuildReturn} -ne 0 ] ; then
 	echo "Image building unsuccessful."
 	if [ "${FULLIMAGEPATH}" !=  '.' ] && [ -f ${FULLIMAGEPATH} ] ; then
-		echo "Continuing setup with previously successfully built image ${FULLIMAGEPATH}."
+	    echo "Continuing setup with previously successfully built image ${FULLIMAGEPATH}."
 	else
-		echo -e "Error: singularity image ${FULLIMAGEPATH} not found! RTE not enabled."
-		exit $imageBuildReturn
+	    echo -e "Error: singularity image ${FULLIMAGEPATH} not found! RTE not enabled."
+	    exit $imageBuildReturn
 	fi
 else 
 echo "Using successfully built image at path ${FULLIMAGEPATH}"

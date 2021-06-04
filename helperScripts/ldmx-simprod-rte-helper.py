@@ -38,9 +38,12 @@ def parse_ldmx_config(config='ldmxjob.config'):
 #        sys.exit(1)
     # mandatory options
     for opt in ['DetectorVersion', 'FieldMap']:
-        if opt not in conf_dict:
-            logger.error('%s is not defined in the %s. Job aborted.', opt, config)
-            sys.exit(1)
+        if opt not in conf_dict :
+            if 'APrimeMass' in conf_dict: # don't need detector details for pure event library generation jobs 
+                conf_dict[opt] = None     # just set to empty to avoid missing field later
+            else :
+                logger.error('%s is not defined in the %s. Job aborted.', opt, config)
+                sys.exit(1)
     # ensure FileName is set to something
     if 'FileName' not in conf_dict:
         conf_dict['FileName'] = 'output.root'
@@ -53,9 +56,19 @@ def parse_ldmx_config(config='ldmxjob.config'):
 
 
 def print_eval(conf_dict):
-    print('export DETECTOR="ldmx-det-full-v{DetectorVersion}-fieldmap-magnet"\n'
-          'export FIELDMAP="{FieldMap}"\n'
-          'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
+    printString= ('export DETECTOR="ldmx-det-full-v{DetectorVersion}-fieldmap-magnet"\n'
+                  'export FIELDMAP="{FieldMap}"\n'
+                  'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
+    if 'APrimeMass' in conf_dict :
+        printString+=('\nexport APMASS="{APrimeMass}"\n'
+                      'export NEVENTS="{NumberOfEvents}"\n'
+                      'export RUNNB="{runNumber}"\n'
+                      'export ENERGIES="{IncidentEnergies}"'
+                      .format(**conf_dict))
+
+    print( printString ) #'export DETECTOR="ldmx-det-full-v{DetectorVersion}-fieldmap-magnet"\n'
+          #'export FIELDMAP="{FieldMap}"\n'
+          #'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
 
 
 def calculate_md5_adler32_checksum(file, chunk_size=524288):
@@ -137,7 +150,7 @@ def collect_from_json( infile, in_conf ):
         config_dict['RandomSeed1'] = mjson['sequence'][0]['randomSeeds'][0]
         config_dict['RandomSeed2'] = mjson['sequence'][0]['randomSeeds'][1]
 #    else :   
-# should probably first look up if weäre using an input file, or if we can find a master random seed, and only in those cases accept not having a random seed specified.     
+# should probably first look up if we're using an input file, or if we can find a master random seed, and only in those cases accept not having a random seed specified.     
 #        logger.error('RandomSeed1 and/or RandomSeed2 is not set in %s. Job aborted.', infile)
 #        sys.exit(1)
 
@@ -163,8 +176,6 @@ def collect_from_json( infile, in_conf ):
                     if 'threshold' in k or 'factor' in k :
                         keepKey=keepKey+'[MeV]'
                     config_dict[keepKey]=val
-
-
         elif 'biasing_particle' in  mjson['sequence'][0] :
             config_dict['Geant4BiasParticle']  = mjson['sequence'][0]['biasing_particle'] if 'biasing_particle' in  mjson['sequence'][0] else None
             config_dict['Geant4BiasProcess']   = mjson['sequence'][0]['biasing_process'] if 'biasing_process' in  mjson['sequence'][0] else None
@@ -279,11 +290,9 @@ def collect_from_json( infile, in_conf ):
             config_dict[condName+'FrontZ'] = cond['EcalHexReadout'][det]['ecalFrontZ']
             config_dict[condName+'NumberCellRHeight'] = cond['EcalHexReadout'][det]['nCellRHeight']
 
-            
     config_dict['IsRecon'] = isRecon
     config_dict['IsTriggerSkim'] = isTriggerSkim
     config_dict['IsBDTSkim'] = isBDTSkim
-
     config_dict['ROOTCompressionSetting'] = mjson['compressionSetting'] if 'compressionSetting' in mjson else None 
 
     if 'maxEvents' in mjson and mjson['maxEvents'] > -1 :
@@ -313,7 +322,10 @@ def set_remote_output(conf_dict, meta):
         pfn = conf_dict['FinalOutputBasePath']
         while pfn.endswith('/'):
             pfn = pfn[:-1]
-        pfn += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+        if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
+            pfn += '/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+        else :
+            pfn += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
         meta['remote_output'] = {'rse': conf_dict['FinalOutputDestination'],
                                  'pfn': pfn}
         meta['DataLocation'] = pfn
@@ -344,12 +356,69 @@ def get_pileup_file(conf_dict):
     return
 
 
+def collect_madgraph_meta( conf_dict):
+
+    meta = {}
+    meta['IsSimulation'] = True
+    # madgraph library generation specifics 
+    for fromconf in ['APrimeMass', 'NumberOfEvents', 'runNumber', 'IncidentEnergies', 'IsEventLibrary', 'BeamEnergy']:
+        meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict else None
+    # rucio specifics
+    for fromconf in ['Scope', 'SampleId', 'BatchID', 'PhysicsProcess']:
+        meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict else None
+    # env
+    if 'ACCOUNTING_WN_INSTANCE' in os.environ:
+        meta['LdmxImage'] = os.environ['ACCOUNTING_WN_INSTANCE']
+    elif 'SINGULARITY_IMAGE' in os.environ:
+        meta['LdmxImage'] = os.environ['SINGULARITY_IMAGE'].split('/')[-1]
+    else:
+        meta['LdmxImage'] = None
+    meta['ARCCEJobID'] = os.environ['GRID_GLOBAL_JOBID'].split('/')[-1] if 'GRID_GLOBAL_JOBID' in os.environ else None
+    meta['FileCreationTime'] = int(time.time())
+    meta['Walltime'] = meta['FileCreationTime'] - job_starttime()
+
+    # Check output file actually exists
+    if not os.path.exists( 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}.tar.gz'.format(**meta) ):
+        logger.error('Output tarball does not exist!')
+        return meta
+
+    # the job run in the image sets up the output name like this:
+    meta['name'] = 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
+    conf_dict['FileName'] = meta['name']
+    set_remote_output(conf_dict, meta)
+    if os.environ.get('KEEP_LOCAL_COPY'):
+        data_location = os.environ['LDMX_STORAGE_BASE']
+        data_location += '/ldmx/lheFiles/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+        meta['local_replica'] = data_location
+        if 'DataLocation' in meta:
+            meta['DataLocation'] = ','.join([meta['DataLocation'], data_location])
+        else:
+            meta['DataLocation'] = data_location
+
+    if not meta.get('DataLocation'):
+        logger.error('No local or remote output location for output file, file will not be registered in Rucio')
+        return meta
+
+    # Rucio metadata
+    meta['scope'] = meta['Scope']
+    meta['datasetscope'] = meta['Scope']
+    meta['datasetname'] = meta['BatchID']
+    meta['containerscope'] = meta['Scope']
+    meta['containername'] = meta['SampleId']
+
+    meta['bytes'] = os.stat(conf_dict['FileName']).st_size
+    (meta['md5'], meta['adler32']) = calculate_md5_adler32_checksum(conf_dict['FileName'])
+
+    return meta
+
+
+
 def collect_meta(conf_dict, json_file):
 
     meta = collect_from_json(json_file, conf_dict)
+    meta['IsSimulation'] = True
 
     # conf
-    meta['IsSimulation'] = True
     for fromconf in ['Scope', 'SampleId', 'BatchID', 'PhysicsProcess', 'DetectorVersion']:
         meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict else None
     meta['ElectronNumber'] = int(conf_dict['ElectronNumber']) if 'ElectronNumber' in conf_dict else None
@@ -482,7 +551,7 @@ def get_parser():
                         help='Retrieved Rucio metadata JSON file (associated with job input file)')
     parser.add_argument('-j', '--json-metadata', action='store', default='rucio.metadata',
                         help='LDMX Production simulation JSON metadata file')
-    parser.add_argument('action', choices=['init', 'copy-local', 'collect-metadata', 'test'],
+    parser.add_argument('action', choices=['init', 'copy-local', 'collect-metadata', 'collect-metadata-madgraph', 'test'],
                         help='Helper action to perform')
     return parser
 
@@ -522,6 +591,11 @@ if __name__ == '__main__':
 #        if 'PileupLocationLocal' in conf_dict :
 #            get_pileup_file( conf_dict )
     
+    elif cmd_args.action == 'collect-metadata-madgraph':
+        meta = collect_madgraph_meta(conf_dict)
+        with open(cmd_args.json_metadata, 'w') as meta_f:
+            json.dump(meta, meta_f)
+
     elif cmd_args.action == 'collect-metadata':
         meta = collect_meta(conf_dict, cmd_args.metaDump)
         if 'local_replica' in meta:

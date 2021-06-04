@@ -59,6 +59,6 @@ echo "Using successfully built image at path ${FULLIMAGEPATH}"
 fi
 
 cp ${LDCSPATH}/runTimeEnvironments/${RTEname} ${RTEPATH}/APPS/.
-arcctl rte params-set ${RTEPATH}/APPS/${RTEname} SINGULARITY_IMAGE ${FULLIMAGEPATH}
-arcctl rte enable ${RTEPATH}/APPS/${RTEname}
+arcctl rte params-set APPS/${RTEname} SINGULARITY_IMAGE ${FULLIMAGEPATH}
+arcctl rte enable APPS/${RTEname}
 

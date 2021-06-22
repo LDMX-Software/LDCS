@@ -377,14 +377,18 @@ def collect_madgraph_meta( conf_dict):
     meta['FileCreationTime'] = int(time.time())
     meta['Walltime'] = meta['FileCreationTime'] - job_starttime()
 
+    # the job run in the image sets up the output name like this:
+    mgOutName = 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}.tar.gz'.format(**meta)
+    # just add the tid for our purposes 
+    uniqueOutName = 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
     # Check output file actually exists
-    if not os.path.exists( 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}.tar.gz'.format(**meta) ):
+    if not os.path.exists( mgOutName ) : #'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}.tar.gz'.format(**meta) ):
         logger.error('Output tarball does not exist!')
         return meta
 
-    # the job run in the image sets up the output name like this:
-    meta['name'] = 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
+    meta['name'] = uniqueOutName #'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
     conf_dict['FileName'] = meta['name']
+    os.system('mv '+mgOutName+' '+uniqueOutName)
     set_remote_output(conf_dict, meta)
     if os.environ.get('KEEP_LOCAL_COPY'):
         data_location = os.environ['LDMX_STORAGE_BASE']

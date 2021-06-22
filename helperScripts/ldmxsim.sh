@@ -50,7 +50,6 @@ echo -e "Output data file is $OUTPUTDATAFILE\n"
 # Copy over local replica to the worker node (singularity can't see unmounted dirs like storage)
 python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
 
-
 # Start the simulation container
 echo -e "Starting Singularity image $SINGULARITY_IMAGE\n"
 singularity run $SINGULARITY_OPTIONS --home "$PWD" "$SINGULARITY_IMAGE" . ldmxjob.py
@@ -81,6 +80,7 @@ if [ ! -z "$KEEP_LOCAL_COPY" ]; then
 else
   echo "KEEP_LOCAL_COPY is not set, not storing local copy of output"
 fi
+
 
 # Success
 echo "Success, exiting..."

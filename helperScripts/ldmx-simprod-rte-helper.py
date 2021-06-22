@@ -164,7 +164,7 @@ def collect_from_json( infile, in_conf ):
                     config_dict[keepKey]=val
 
     #don't attempt setting these if we're actually using a sim input file)
-    if not in_conf.get("InputFile") :
+    if not 'inputFiles' in mjson : #in_conf.get("InputFile") : <-- adjust this; LHE files are passed as "InputFile"s but not as "p.inputFiles"
         if 'biasing_operators' in  mjson['sequence'][0] :
             for params in mjson['sequence'][0]['biasing_operators'] :
                 p = params['class_name']
@@ -173,7 +173,7 @@ def collect_from_json( infile, in_conf ):
                     if '_name' in k :
                         continue
                     keepKey=key+"_"+k
-                    if 'threshold' in k or 'factor' in k :
+                    if 'threshold' in k : # or 'factor' in k :
                         keepKey=keepKey+'[MeV]'
                     config_dict[keepKey]=val
         elif 'biasing_particle' in  mjson['sequence'][0] :
@@ -186,8 +186,11 @@ def collect_from_json( infile, in_conf ):
         config_dict['APrimeMass']          = mjson['sequence'][0]['APrimeMass'] if 'APrimeMass' in  mjson['sequence'][0] else None
         config_dict['APrimeMass']          = mjson['sequence'][0]['dark_brem']['ap_mass'] if 'dark_brem' in  mjson['sequence'][0] else None
             #let these depend on if we are actually generating signal 
-        config_dict['DarkBremMethod']      = mjson['sequence'][0]['darkbrem_method'] if  config_dict['APrimeMass']  and 'darkbrem_method' in  mjson['sequence'][0] else None
-        config_dict['DarkBremModel']      = mjson['sequence'][0]['dark_brem']['model']['name'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None
+        config_dict['DarkBremMethod']      = mjson['sequence'][0]['dark_brem']['model']['method'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None   #'method' in  mjson['sequence'][0]['dark_brem']['model'] else None
+        config_dict['DarkBremModel']       = mjson['sequence'][0]['dark_brem']['model']['name'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None
+        config_dict['DarkBremEpsilon']     = mjson['sequence'][0]['dark_brem']['model']['epsilon'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None  
+        config_dict['DarkBremThreshold[GeV]'] = mjson['sequence'][0]['dark_brem']['model']['threshold'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None  
+        config_dict['DarkBremOnePerEvent'] = mjson['sequence'][0]['dark_brem']['only_one_per_event'] if config_dict['APrimeMass'] and 'dark_brem' in  mjson['sequence'][0] else None
         config_dict['DarkBremMethodXsecFactor'] = mjson['sequence'][0]['darkbrem_globalxsecfactor'] if config_dict['APrimeMass'] and 'darkbrem_globalxsecfactor' in  mjson['sequence'][0] else None
     
     #ok. over reco stuff, where parameter names can get confusing.

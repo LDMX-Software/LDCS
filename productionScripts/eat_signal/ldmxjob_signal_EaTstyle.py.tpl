@@ -48,10 +48,11 @@ sim = target.dark_brem( ap_mass , db_event_lib_path , 'ldmx-det-v12' )
 
 # attach processors to the sequence pipeline
 from LDMX.Ecal import ecal_hardcoded_conditions, EcalGeometry
+from LDMX.Ecal import ecal_hardcoded_conditions, EcalGeometry
 from LDMX.Ecal import digi as eDigi
 from LDMX.Ecal import vetos
 from LDMX.Hcal import digi as hDigi
-from LDMX.Hcal import HcalGeometry
+from LDMX.Hcal import hcal_hardcoded_conditions, HcalGeometry
 from LDMX.TrigScint import trigScint 
 from LDMX.TrigScint.trigScint import trigScintTrack 
 
@@ -75,7 +76,6 @@ p.sequence.extend(
   ] 
 )
 
-json.dumps(sim.description(), indent=2)
 json.dumps(p.parameterDump(), indent=2)
 
 with open('parameterDump.json', 'w') as outfile:

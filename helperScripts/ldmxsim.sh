@@ -50,6 +50,10 @@ echo -e "Output data file is $OUTPUTDATAFILE\n"
 # Copy over local replica to the worker node (singularity can't see unmounted dirs like storage)
 python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
 
+#untar any madgraph lhe file library tarballs 
+tar -xvzf LDMX_*.tar.gz
+
+
 # Start the simulation container
 echo -e "Starting Singularity image $SINGULARITY_IMAGE\n"
 singularity run $SINGULARITY_OPTIONS --home "$PWD" "$SINGULARITY_IMAGE" . ldmxjob.py

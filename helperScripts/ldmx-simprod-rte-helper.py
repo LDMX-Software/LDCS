@@ -164,7 +164,7 @@ def collect_from_json( infile, in_conf ):
                     config_dict[keepKey]=val
 
     #don't attempt setting these if we're actually using a sim input file)
-    if not 'inputFiles' in mjson : #in_conf.get("InputFile") : <-- adjust this; LHE files are passed as "InputFile"s but not as "p.inputFiles"
+    if not 'inputFiles' in mjson or mjson['inputFiles'] == [] : #in_conf.get("InputFile") : <-- adjust this; LHE files are passed as "InputFile"s but not as "p.inputFiles"
         if 'biasing_operators' in  mjson['sequence'][0] :
             for params in mjson['sequence'][0]['biasing_operators'] :
                 p = params['class_name']
@@ -184,13 +184,15 @@ def collect_from_json( infile, in_conf ):
             config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
             
         config_dict['APrimeMass']          = mjson['sequence'][0]['APrimeMass'] if 'APrimeMass' in  mjson['sequence'][0] else None
-        config_dict['APrimeMass']          = mjson['sequence'][0]['dark_brem']['ap_mass'] if 'dark_brem' in  mjson['sequence'][0] else None
             #let these depend on if we are actually generating signal 
-        config_dict['DarkBremMethod']      = mjson['sequence'][0]['dark_brem']['model']['method'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None   #'method' in  mjson['sequence'][0]['dark_brem']['model'] else None
-        config_dict['DarkBremModel']       = mjson['sequence'][0]['dark_brem']['model']['name'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None
-        config_dict['DarkBremEpsilon']     = mjson['sequence'][0]['dark_brem']['model']['epsilon'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None  
-        config_dict['DarkBremThreshold[GeV]'] = mjson['sequence'][0]['dark_brem']['model']['threshold'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None  
-        config_dict['DarkBremOnePerEvent'] = mjson['sequence'][0]['dark_brem']['only_one_per_event'] if config_dict['APrimeMass'] and 'dark_brem' in  mjson['sequence'][0] else None
+        if 'dark_brem' in  mjson['sequence'][0] :
+            config_dict['APrimeMass[MeV]']       = mjson['sequence'][0]['dark_brem']['ap_mass'] 
+            config_dict['DarkBremMethod']         = mjson['sequence'][0]['dark_brem']['model']['method'] 
+            config_dict['DarkBremModel']          = mjson['sequence'][0]['dark_brem']['model']['name'] 
+            config_dict['DarkBremEpsilon']        = mjson['sequence'][0]['dark_brem']['model']['epsilon'] 
+            config_dict['DarkBremThreshold[GeV]'] = mjson['sequence'][0]['dark_brem']['model']['threshold'] 
+            config_dict['DarkBremOnePerEvent']    = mjson['sequence'][0]['dark_brem']['only_one_per_event'] 
+
         config_dict['DarkBremMethodXsecFactor'] = mjson['sequence'][0]['darkbrem_globalxsecfactor'] if config_dict['APrimeMass'] and 'darkbrem_globalxsecfactor' in  mjson['sequence'][0] else None
     
     #ok. over reco stuff, where parameter names can get confusing.
@@ -281,17 +283,31 @@ def collect_from_json( infile, in_conf ):
         if "RandomNumberSeedService" in cond['className'] :
             config_dict['RandomNumberSeedMode'] = cond['seedMode']
             config_dict['RandomNumberSeed'] = cond['seed']
-        elif "GeometryProvider" in cond['className'] :
+        elif "Geometry" in cond['className'] :
             #print("Looking in "+cond['className'])
-            condName=cond['className'].split("::")[1]
+            #condName=cond['className'].split("::")[1]
+            condName=cond['objectName']
 #            condName=condName.replace("ldmx::", "")
-            condName=condName.replace("Provider", "HexReadout")
+            condName=condName.replace("Provider", "")#"HexReadout")
             #print("Using condName "+condName)
-#
-            config_dict[condName+'Gap'] = cond['EcalHexReadout'][det]['gap']
-            config_dict[condName+'MinR'] = cond['EcalHexReadout'][det]['moduleMinR']
-            config_dict[condName+'FrontZ'] = cond['EcalHexReadout'][det]['ecalFrontZ']
-            config_dict[condName+'NumberCellRHeight'] = cond['EcalHexReadout'][det]['nCellRHeight']
+            if 'EcalHexReadout' in cond :
+                config_dict[condName+'Gap[mm]'] = cond['EcalHexReadout'][det]['gap']
+                config_dict[condName+'ModuleMinR[mm]'] = cond['EcalHexReadout'][det]['moduleMinR']
+                config_dict[condName+'FrontZ[mm]'] = cond['EcalHexReadout'][det]['ecalFrontZ']
+                config_dict[condName+'NumberCellRHeight[mm]'] = cond['EcalHexReadout'][det]['nCellRHeight']
+            elif 'HcalGeometry' in cond :
+                config_dict[condName+'ThicknessScint[mm]'] = cond['HcalGeometry'][det]['ThicknessScint']
+                config_dict[condName+'WidthScint[mm]'] = cond['HcalGeometry'][det]['WidthScint']
+                config_dict[condName+'EcalDx'] = cond['HcalGeometry'][det]['EcalDx']
+                config_dict[condName+'EcalDy'] = cond['HcalGeometry'][det]['EcalDy']
+                config_dict[condName+'NumSections'] = cond['HcalGeometry'][det]['NumSections']
+
+                
+        elif "Conditions" in cond['className'] :
+            if 'columns' in cond : 
+                for col in range(len(cond['columns'])) :
+                    config_dict[condName+'_'+cond['columns'][col]]=cond['entries']['values'][col]
+
 
     config_dict['IsRecon'] = isRecon
     config_dict['IsTriggerSkim'] = isTriggerSkim

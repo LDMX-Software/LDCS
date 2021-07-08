@@ -369,7 +369,7 @@ def get_local_copy(conf_dict):
         logger.info("Copying local input file %s", infile ) #, fullPath, fname )
 #        os.system('cp '+fullPath+'/'+fname+' .')
         os.system('cp '+infile+' .')
-        logger.info("Copied local input file %s to node", infile.split("/")[:-1] )
+        logger.info("Copied local input file %s to node", infile.split("/")[-1] )
     return
 
 def get_pileup_file(conf_dict):
@@ -618,7 +618,8 @@ if __name__ == '__main__':
         print_eval(conf_dict)
     elif cmd_args.action == 'copy-local':
         if 'InputDataLocationLocalRSE' in conf_dict :
-            get_local_copy( conf_dict )
+            if not conf_dict['InputDataLocationLocalRSE'].split(",")[0] == None  :
+                get_local_copy( conf_dict )
 # turns out this is not needed
 #        if 'PileupLocationLocal' in conf_dict :
 #            get_pileup_file( conf_dict )

@@ -51,7 +51,8 @@ echo -e "Output data file is $OUTPUTDATAFILE\n"
 python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
 
 #untar any madgraph lhe file library tarballs 
-tar -xvzf LDMX_*.tar.gz
+find . -name LDMX_*.tar.gz -exec tar -xvzf {} \;
+#tar -xvzf LDMX_*.tar.gz
 
 
 # Start the simulation container

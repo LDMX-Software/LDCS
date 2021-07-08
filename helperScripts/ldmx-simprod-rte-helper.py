@@ -357,11 +357,19 @@ def set_remote_output(conf_dict, meta):
             pass
 
 def get_local_copy(conf_dict):
-    for infile in conf_dict['InputFile'] :
-        fname='./'+infile.split(":")[1]
-        fullPath=conf_dict['InputDataLocationLocal']
-        os.system('cp '+fullPath+' '+fname)
-        logger.info("Copied local input file %s to node", fullpath )
+#    inList = []
+    #get the local path from the first input file 
+    # warning: this assumes they're all in the same dir (which is true for a batch)
+    fullPath=os.path.dirname( conf_dict['InputDataLocationLocal'].split(",")[0]) 
+    inList = conf_dict['InputFile']
+#    for infile in conf_dict['InputFile'].split(",") : # inList
+    for infile in conf_dict['InputDataLocationLocal'].split(",") : # inList
+#        fname=infile.split(":")[1] 
+#        logger.info("Copying local input file %s from %s to %s", infile, fullPath, fname )
+        logger.info("Copying local input file %s", infile ) #, fullPath, fname )
+#        os.system('cp '+fullPath+'/'+fname+' .')
+        os.system('cp '+infile+' .')
+        logger.info("Copied local input file %s to node", infile.split("/")[:-1] )
     return
 
 def get_pileup_file(conf_dict):

@@ -94,6 +94,8 @@ def collect_from_json( infile, in_conf ):
         sys.exit(1)
 
     logger.info('Opened {}'.format(infile))
+    logger.info(json.dumps(mjson, indent = 2, sort_keys=True ))
+
     if 'generators' in mjson['sequence'][0] :
         config_dict['GunPositionX[mm]']  = mjson['sequence'][0]['generators'][0]['position'][0] if 'position' in mjson['sequence'][0]['generators'][0] else None
         config_dict['GunPositionY[mm]']  = mjson['sequence'][0]['generators'][0]['position'][1] if 'position' in mjson['sequence'][0]['generators'][0] else None
@@ -215,7 +217,7 @@ def collect_from_json( infile, in_conf ):
 #            procName=procName.replace("ldmx::", "")
             procName=procName.replace("Producer", "")
             procName=procName.replace("Processor", "")
-        if procName == "EcalDigiProducer" :
+        if procName == "EcalDigi" :
             config_dict[procName+'Gain'] = seq['hgcroc']['gain']
             config_dict[procName+'ClockCycle[ns]'] = seq['hgcroc']['clockCycle']
             config_dict[procName+'Pedestal'] = seq['hgcroc']['pedestal']
@@ -234,48 +236,50 @@ def collect_from_json( infile, in_conf ):
             config_dict[procName+'TimeDnSlope'] = seq['hgcroc']['timeDnSlope']
             config_dict[procName+'TimePeak'] = seq['hgcroc']['timePeak']
             config_dict[procName+'DrainRate'] = seq['hgcroc']['drainRate']
-        elif procName == "EcalRecProducer" :
+        elif procName == "EcalRec" :
             config_dict[procName+'SecondOrderEnergyCorrection'] = seq['secondOrderEnergyCorrection']
             config_dict[procName+'ChargePerMIP'] = seq['charge_per_mip']
             config_dict[procName+'SiEnergyMIP'] = seq['mip_si_energy']
             config_dict[procName+'ClockCycle[ns]'] = seq['clock_cycle']
-        elif procName == "EcalVetoProcessor" :
+        elif procName == "EcalVeto" :
             config_dict[procName+'Layers'] = seq['num_ecal_layers']
             config_dict[procName+'DiscriminatorCut'] = seq['disc_cut']
             config_dict[procName+'BDTfile'] = seq['bdt_file']
             config_dict[procName+'DoBDT'] = seq['do_bdt']
-        elif procName == "HcalVetoProcessor" :
+        elif procName == "HcalVeto" :
             config_dict[procName+'MaxPE'] = seq['pe_threshold']
             config_dict[procName+'MaxTime[ns]'] = seq['max_time']
             config_dict[procName+'MaxDepth[mm]'] = seq['max_depth']
             config_dict[procName+'BackMinPE'] = seq['back_min_pe']
-        elif procName == "HcalDigiProducer" :
+        elif procName == "HcalDigi" :
             config_dict[procName+'MeanNoiseSiPM'] = seq['meanNoise']
             config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']
             config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
             config_dict[procName+'AttLength[m]'] = seq['strip_attenuation_length']
             config_dict[procName+'PosResolution[mm]'] = seq['strip_position_resolution']
-        elif procName == "TrigScintDigiProducer" :
+        elif procName == "TrigScintDigi" :
             config_dict[procName+'MeanNoiseSiPM'] = seq['mean_noise']
             config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']
             config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
-        elif procName == "TrigScintClusterProducer" :
+        elif procName == "TrigScintCluster" :
             config_dict[procName+'MaxWidth'] = seq['max_cluster_width']
             config_dict[procName+'SeedThreshold'] = seq['seed_threshold']
             config_dict[procName+'MinThreshold'] = seq['clustering_threshold']
-        elif procName == "TrigScintTrackProducer" :
+            config_dict[procName+'InputPassName'] = seq['input_pass_name']
+        elif procName == "TrigScintTrack" :
             config_dict[procName+'MaxDelta'] = seq['delta_max']
             config_dict[procName+'SeedingCollection'] = seq['seeding_collection']
             config_dict[procName+'MinThreshold'] = seq['tracking_threshold']
+            config_dict[procName+'InputPassName'] = seq['input_pass_name']
         elif procName == "TrackerHitKiller" :
             config_dict[procName+'Efficiency'] = seq['hitEfficiency']
-        elif procName == "TriggerProcessor" :
+        elif procName == "Trigger" :
             config_dict[procName+'MaxEnergy[MeV]'] = seq['threshold']
             config_dict[procName+'EcalEndLayer'] = seq['end_layer']
             config_dict[procName+'EcalStartLayer'] = seq['start_layer']
-        elif procName == "FindableTrackProcessor" :
+        elif procName == "FindableTrack" :
             config_dict[procName+'WasRun'] = 1
-        elif procName == "TrackerVetoProcessor" :
+        elif procName == "TrackerVeto" :
             config_dict[procName+'WasRun'] = 1
 
     det = 'v{DetectorVersion}'.format(**in_conf)
@@ -308,11 +312,11 @@ def collect_from_json( infile, in_conf ):
                 for col in range(len(cond['columns'])) :
                     config_dict[condName+'_'+cond['columns'][col]]=cond['entries']['values'][col]
 
-
     config_dict['IsRecon'] = isRecon
     config_dict['IsTriggerSkim'] = isTriggerSkim
     config_dict['IsBDTSkim'] = isBDTSkim
     config_dict['ROOTCompressionSetting'] = mjson['compressionSetting'] if 'compressionSetting' in mjson else None 
+    config_dict['PassName'] = mjson['passName']
 
     if 'maxEvents' in mjson and mjson['maxEvents'] > -1 :
         config_dict['NumberOfEvents'] = mjson['maxEvents']
@@ -357,17 +361,8 @@ def set_remote_output(conf_dict, meta):
             pass
 
 def get_local_copy(conf_dict):
-#    inList = []
-    #get the local path from the first input file 
-    # warning: this assumes they're all in the same dir (which is true for a batch)
-    fullPath=os.path.dirname( conf_dict['InputDataLocationLocal'].split(",")[0]) 
-    inList = conf_dict['InputFile']
-#    for infile in conf_dict['InputFile'].split(",") : # inList
-    for infile in conf_dict['InputDataLocationLocal'].split(",") : # inList
-#        fname=infile.split(":")[1] 
-#        logger.info("Copying local input file %s from %s to %s", infile, fullPath, fname )
-        logger.info("Copying local input file %s", infile ) #, fullPath, fname )
-#        os.system('cp '+fullPath+'/'+fname+' .')
+    for infile in conf_dict['InputDataLocationLocal'].split(",") : 
+        logger.info("Copying local input file %s", infile )
         os.system('cp '+infile+' .')
         logger.info("Copied local input file %s to node", infile.split("/")[-1] )
     return
@@ -516,13 +511,14 @@ def combine_meta( oldMeta, newMeta):
     for key in inputMeta : #.split(',') :
         metaOut[key] = inputMeta[key]
 
-    logger.debug('This should be the current job metadata:  {}'.format(newMeta))
+    logger.info('This should be the current job metadata:  {}'.format(newMeta))
 
     #overwrite anything that has been updated
     for key in newMeta:
         metaOut[key] = newMeta[key]
 
     logger.debug('Final metadata:  {}'.format(metaOut))
+#    logger.info('Final metadata:  {}'.format(metaOut))
 
 
     return metaOut 
@@ -618,7 +614,7 @@ if __name__ == '__main__':
         print_eval(conf_dict)
     elif cmd_args.action == 'copy-local':
         if 'InputDataLocationLocalRSE' in conf_dict :
-            if not conf_dict['InputDataLocationLocalRSE'].split(",")[0] == None  :
+            if not conf_dict['InputDataLocationLocalRSE'].split(",")[0] == 'None'  :
                 get_local_copy( conf_dict )
 # turns out this is not needed
 #        if 'PileupLocationLocal' in conf_dict :

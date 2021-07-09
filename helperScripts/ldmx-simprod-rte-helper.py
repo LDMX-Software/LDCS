@@ -442,16 +442,27 @@ def collect_madgraph_meta( conf_dict):
 
 def collect_meta(conf_dict, json_file):
 
-    meta = collect_from_json(json_file, conf_dict)
+    meta = {}
+    if os.path.isfile(json_file) :
+        meta = collect_from_json(json_file, conf_dict)
     meta['IsSimulation'] = True
 
     # conf
     for fromconf in ['Scope', 'SampleId', 'BatchID', 'PhysicsProcess', 'DetectorVersion']:
         meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict else None
     meta['ElectronNumber'] = int(conf_dict['ElectronNumber']) if 'ElectronNumber' in conf_dict else None
-    if 'BeamEnergy' in conf_dict : 
+    if not 'BeamEnergy' in meta and 'BeamEnergy' in conf_dict : 
         meta['BeamEnergy'] = conf_dict['BeamEnergy']
         #else rely on it being copied..?
+    if not 'RunNumber' in meta and 'runNumber' in conf_dict :
+        meta['RunNumber'] = conf_dict['runNumber']
+    if not 'RandomSeed1' in meta and 'RandomSeed1' in conf_dict :
+        meta['RandomSeed1'] = conf_dict['RandomSeed1']
+    if not 'RandomSeed2' in meta and 'RandomSeed2' in conf_dict :
+        meta['RandomSeed2'] = conf_dict['RandomSeed2']
+    if not 'NumberOfEvents' in meta and 'NumberOfEvents' in conf_dict :
+        meta['NumberOfEvents'] = conf_dict['NumberOfEvents']
+  
     meta['MagneticFieldmap'] = conf_dict['FieldMap'] if 'FieldMap' in conf_dict else None
     # env
     if 'ACCOUNTING_WN_INSTANCE' in os.environ:
@@ -639,7 +650,7 @@ if __name__ == '__main__':
             meta['InputFile'] = conf_dict.get('InputFile')
             # combine the current job's metadata (meta) with the old one (inputMeta)
             meta=combine_meta( conf_dict.get('InputMetadata'), meta )
-#            meta=combine_meta( (conf_dict.get('InputMetadata')).get("inputMeta"), meta )
+            #meta=combine_meta( (conf_dict.get('InputMetadata')).get("inputMeta"), meta )
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
 

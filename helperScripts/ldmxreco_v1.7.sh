@@ -6,7 +6,6 @@
 echo -e "ldmxsim_v1.7.sh running on host $(/bin/hostname -f)\n"
 
 # Check all files are present
-#for f in "ldmxproduction.config" "ldmxsim.mac.template" "ldmx-simprod-rte-helper.py"; do
 for f in "ldmxproduction.config" "ldmxjob.py" "ldmx-simprod-rte-helper.py"; do
   if [ ! -f "$f" ]; then
     echo "ERROR: LDMX Simulation production job requires $f file but it is missing" >&2
@@ -53,6 +52,7 @@ python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
 
 #untar any madgraph lhe file library tarballs 
 find . -name LDMX_*.tar.gz -exec tar -xvzf {} \;
+
 
 
 # Start the simulation container

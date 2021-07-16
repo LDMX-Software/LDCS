@@ -86,12 +86,31 @@ def calculate_md5_adler32_checksum(file, chunk_size=524288):
 def collect_from_json( infile, in_conf ):
     #function to convert json nested list to flat metadata list 
     config_dict = {}
+
+    #get a minimum of info to return in the case the parameter dump wasn't created (like v1.7 running)
+    isRecon = False 
+    isTriggerSkim = False 
+    isBDTSkim = False 
+    if in_conf.get("IsTriggerSkim") :
+        if in_conf.get("IsTriggerSkim") == "Yes" :
+            isTriggerSkim=True
+    if in_conf.get("IsBDTSkim") :
+        if in_conf.get("IsBDTSkim") == "Yes" :
+            isBDTSkim=True
+    if in_conf.get("IsRecon") :
+        if in_conf.get("IsRecon") == "Yes" :
+            isRecon=True
+    config_dict['IsRecon'] = isRecon
+    config_dict['IsTriggerSkim'] = isTriggerSkim
+    config_dict['IsBDTSkim'] = isBDTSkim
+
     try:
         with open(infile, "r") as jf :
             mjson = json.load(jf)
     except Exception as e:
         logger.error('Failed to open {}: {}'.format(infile, str(e)))
-        sys.exit(1)
+        return config_dict 
+#        sys.exit(1)
 
     logger.info('Opened {}'.format(infile))
     logger.info(json.dumps(mjson, indent = 2, sort_keys=True ))
@@ -200,16 +219,8 @@ def collect_from_json( infile, in_conf ):
     #ok. over reco stuff, where parameter names can get confusing.
     # add here as more processors are included
     # not putting in protections here for every possible parameter name, better to let a test job fail if the parameter naming has changed
-    isRecon = False 
-    isTriggerSkim = False 
-    isBDTSkim = False 
-    if in_conf.get("IsTriggerSkim") :
-        if in_conf.get("IsTriggerSkim") == "Yes" :
-            isTriggerSkim=True
-    if in_conf.get("IsBDTSkim") :
-        if in_conf.get("IsBDTSkim") == "Yes" :
-            isBDTSkim=True
-            
+
+    isRecon = False #allow for checking this from parameter dump, if one exists
     for seq in mjson['sequence'] :
         procName=seq['className'].split('::')[1]  #remove namespace 
         if procName != "Simulator" :  #everything except simulation is reconstruction
@@ -313,14 +324,13 @@ def collect_from_json( infile, in_conf ):
                     config_dict[condName+'_'+cond['columns'][col]]=cond['entries']['values'][col]
 
     config_dict['IsRecon'] = isRecon
-    config_dict['IsTriggerSkim'] = isTriggerSkim
-    config_dict['IsBDTSkim'] = isBDTSkim
+
     config_dict['ROOTCompressionSetting'] = mjson['compressionSetting'] if 'compressionSetting' in mjson else None 
     config_dict['PassName'] = mjson['passName']
 
     if 'maxEvents' in mjson and mjson['maxEvents'] > -1 :
         config_dict['NumberOfEvents'] = mjson['maxEvents']
-        #othersise we are most definitely using an input file and the number from there should be kept 
+        #otherwise we are most definitely using an input file and the number from there should be kept 
 
     logger.info(json.dumps(config_dict, indent = 2, sort_keys=True ))
     return config_dict
@@ -442,9 +452,9 @@ def collect_madgraph_meta( conf_dict):
 
 def collect_meta(conf_dict, json_file):
 
-    meta = {}
-    if os.path.isfile(json_file) :
-        meta = collect_from_json(json_file, conf_dict)
+    #meta = {}
+    #if os.path.isfile(json_file) :
+    meta = collect_from_json(json_file, conf_dict)
     meta['IsSimulation'] = True
 
     # conf
@@ -460,7 +470,7 @@ def collect_meta(conf_dict, json_file):
         meta['RandomSeed1'] = conf_dict['RandomSeed1']
     if not 'RandomSeed2' in meta and 'RandomSeed2' in conf_dict :
         meta['RandomSeed2'] = conf_dict['RandomSeed2']
-    if not 'NumberOfEvents' in meta and 'NumberOfEvents' in conf_dict :
+    if ( not 'NumberOfEvents' in meta or meta['NumberOfEvents']<=0 ) and 'NumberOfEvents' in conf_dict :
         meta['NumberOfEvents'] = conf_dict['NumberOfEvents']
   
     meta['MagneticFieldmap'] = conf_dict['FieldMap'] if 'FieldMap' in conf_dict else None

@@ -1,0 +1,43 @@
+
+/persistency/gdml/read detector.gdml
+    
+/ldmx/pw/enable 
+/ldmx/pw/read detectors/scoring_planes/detector.gdml
+
+/ldmx/biasing/enable
+/ldmx/biasing/particle gamma
+/ldmx/biasing/process GammaToMuPair
+/ldmx/biasing/volume target
+/ldmx/biasing/threshold 5000
+
+/run/initialize
+
+/ldmx/biasing/xsec/particle gamma
+/ldmx/biasing/xsec/threshold 5000
+/ldmx/biasing/xsec/factor 1000000000
+
+/gun/particle e-
+/gun/energy 8.0 GeV
+/gun/position 0. 0. -1.2 mm
+/gun/direction 0. 0. 8.0 GeV
+
+/ldmx/plugins/load TargetBremFilter libBiasing.so
+/ldmx/plugins/TargetBremFilter/volume target_PV
+/ldmx/plugins/TargetBremFilter/recoil_threshold 3000
+/ldmx/plugins/TargetBremFilter/brem_threshold 5000
+
+/ldmx/plugins/load TargetProcessFilter libBiasing.so 
+
+/ldmx/generators/beamspot/enable
+/ldmx/generators/beamspot/sizeX 20.0
+/ldmx/generators/beamspot/sizeY 80.0
+
+/ldmx/persistency/root/dropCol MagnetScoringPlaneHits
+/ldmx/persistency/root/dropCol TrackerScoringPlaneHits
+/ldmx/persistency/root/verbose 0
+/ldmx/persistency/root/file {{ root_file }}
+/ldmx/persistency/root/description "Target muon conversion, xsec bias 1e9"
+/ldmx/persistency/root/runNumber {{ run }}
+/random/setSeeds {{ seed1 }} {{ seed2 }}
+
+/run/beamOn 3000000

@@ -3,9 +3,10 @@
 # Wrapper script for LDMX simulation
 #
 
-echo -e "ldmxsim.sh running on host $(/bin/hostname -f)\n"
+echo -e "ldmxsim_v1.7.sh running on host $(/bin/hostname -f)\n"
 
 # Check all files are present
+#for f in "ldmxproduction.config" "ldmxsim.mac.template" "ldmx-simprod-rte-helper.py"; do
 for f in "ldmxproduction.config" "ldmxjob.py" "ldmx-simprod-rte-helper.py"; do
   if [ ! -f "$f" ]; then
     echo "ERROR: LDMX Simulation production job requires $f file but it is missing" >&2
@@ -13,14 +14,17 @@ for f in "ldmxproduction.config" "ldmxjob.py" "ldmx-simprod-rte-helper.py"; do
   fi
 done
 
+#not an app conf file, but a G4 .mac file, in the v1.7 simulations. rename to respect this convention
+cp ldmxjob.py ldmxsim.mac.template
+
 echo -e "ldmxproduction.config:\n"
 cat ldmxproduction.config
 echo
 echo
 
 
-echo -e "ldmxjob.py:\n--------------------------\n "
-cat ldmxjob.py
+echo -e "ldmxsim.mac.template:\n--------------------------\n "
+cat ldmxsim.mac.template
 echo -e "--------------------------\n "echo
 echo
 
@@ -48,16 +52,16 @@ eval $( python ldmx-simprod-rte-helper.py -c ldmxproduction.config init )
 echo -e "Output data file is $OUTPUTDATAFILE\n"
 
 # Copy over local replica to the worker node (singularity can't see unmounted dirs like storage)
-python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
+#python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
 
 #untar any madgraph lhe file library tarballs 
-find . -name LDMX_*.tar.gz -exec tar -xvzf {} \;
+#find . -name LDMX_*.tar.gz -exec tar -xvzf {} \;
 #tar -xvzf LDMX_*.tar.gz
 
 
 # Start the simulation container
 echo -e "Starting Singularity image $SINGULARITY_IMAGE\n"
-singularity run $SINGULARITY_OPTIONS --home "$PWD" "$SINGULARITY_IMAGE" . ldmxjob.py
+singularity run $SINGULARITY_OPTIONS --home "$PWD" "$SINGULARITY_IMAGE" . ldmx-sim ldmxsim.mac.template
 RET=$?
 
 if [ $RET -ne 0 ]; then

@@ -1,0 +1,35 @@
+
+/persistency/gdml/read detector.gdml
+    
+/ldmx/pw/enable 
+/ldmx/pw/read detectors/scoring_planes/detector.gdml
+    
+/ldmx/biasing/enable
+/ldmx/biasing/particle e-
+/ldmx/biasing/process electronNuclear
+/ldmx/biasing/volume target
+
+/run/initialize
+
+/ldmx/biasing/xsec/particle e-
+/ldmx/biasing/xsec/factor 550
+
+/gun/particle e-
+/gun/energy 8.0 GeV
+/gun/position 0. 0. -1.2 mm
+/gun/direction 0. 0. 8.0 GeV
+
+/ldmx/plugins/load TargetENProcessFilter libBiasing.so 
+/ldmx/plugins/TargetENProcessFilter/recoil_threshold 8000
+
+/ldmx/generators/beamspot/enable
+/ldmx/generators/beamspot/sizeX 20.0
+/ldmx/generators/beamspot/sizeY 80.0
+
+/ldmx/persistency/root/verbose 0
+/ldmx/persistency/root/file {{ root_file }}
+/ldmx/persistency/root/description "Target electro-nuclear, 8 GeV electron beam, xsec bias 550"
+/ldmx/persistency/root/runNumber {{ run }}
+/random/setSeeds {{ seed1 }} {{ seed2 }}
+
+/run/beamOn 3000000

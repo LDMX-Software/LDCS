@@ -86,14 +86,35 @@ def calculate_md5_adler32_checksum(file, chunk_size=524288):
 def collect_from_json( infile, in_conf ):
     #function to convert json nested list to flat metadata list 
     config_dict = {}
+
+    #get a minimum of info to return in the case the parameter dump wasn't created (like v1.7 running)
+    isRecon = False 
+    isTriggerSkim = False 
+    isBDTSkim = False 
+    if in_conf.get("IsTriggerSkim") :
+        if in_conf.get("IsTriggerSkim") == "Yes" :
+            isTriggerSkim=True
+    if in_conf.get("IsBDTSkim") :
+        if in_conf.get("IsBDTSkim") == "Yes" :
+            isBDTSkim=True
+    if in_conf.get("IsRecon") :
+        if in_conf.get("IsRecon") == "Yes" :
+            isRecon=True
+    config_dict['IsRecon'] = isRecon
+    config_dict['IsTriggerSkim'] = isTriggerSkim
+    config_dict['IsBDTSkim'] = isBDTSkim
+
     try:
         with open(infile, "r") as jf :
             mjson = json.load(jf)
     except Exception as e:
         logger.error('Failed to open {}: {}'.format(infile, str(e)))
-        sys.exit(1)
+        return config_dict 
+#        sys.exit(1)
 
     logger.info('Opened {}'.format(infile))
+    logger.info(json.dumps(mjson, indent = 2, sort_keys=True ))
+
     if 'generators' in mjson['sequence'][0] :
         config_dict['GunPositionX[mm]']  = mjson['sequence'][0]['generators'][0]['position'][0] if 'position' in mjson['sequence'][0]['generators'][0] else None
         config_dict['GunPositionY[mm]']  = mjson['sequence'][0]['generators'][0]['position'][1] if 'position' in mjson['sequence'][0]['generators'][0] else None
@@ -164,7 +185,7 @@ def collect_from_json( infile, in_conf ):
                     config_dict[keepKey]=val
 
     #don't attempt setting these if we're actually using a sim input file)
-    if not 'inputFiles' in mjson : #in_conf.get("InputFile") : <-- adjust this; LHE files are passed as "InputFile"s but not as "p.inputFiles"
+    if not 'inputFiles' in mjson or mjson['inputFiles'] == [] : #in_conf.get("InputFile") : <-- adjust this; LHE files are passed as "InputFile"s but not as "p.inputFiles"
         if 'biasing_operators' in  mjson['sequence'][0] :
             for params in mjson['sequence'][0]['biasing_operators'] :
                 p = params['class_name']
@@ -184,28 +205,22 @@ def collect_from_json( infile, in_conf ):
             config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
             
         config_dict['APrimeMass']          = mjson['sequence'][0]['APrimeMass'] if 'APrimeMass' in  mjson['sequence'][0] else None
-        config_dict['APrimeMass']          = mjson['sequence'][0]['dark_brem']['ap_mass'] if 'dark_brem' in  mjson['sequence'][0] else None
             #let these depend on if we are actually generating signal 
-        config_dict['DarkBremMethod']      = mjson['sequence'][0]['dark_brem']['model']['method'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None   #'method' in  mjson['sequence'][0]['dark_brem']['model'] else None
-        config_dict['DarkBremModel']       = mjson['sequence'][0]['dark_brem']['model']['name'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None
-        config_dict['DarkBremEpsilon']     = mjson['sequence'][0]['dark_brem']['model']['epsilon'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None  
-        config_dict['DarkBremThreshold[GeV]'] = mjson['sequence'][0]['dark_brem']['model']['threshold'] if  config_dict['APrimeMass']  and 'dark_brem' in  mjson['sequence'][0] else None  
-        config_dict['DarkBremOnePerEvent'] = mjson['sequence'][0]['dark_brem']['only_one_per_event'] if config_dict['APrimeMass'] and 'dark_brem' in  mjson['sequence'][0] else None
+        if 'dark_brem' in  mjson['sequence'][0] :
+            config_dict['APrimeMass[MeV]']       = mjson['sequence'][0]['dark_brem']['ap_mass'] 
+            config_dict['DarkBremMethod']         = mjson['sequence'][0]['dark_brem']['model']['method'] 
+            config_dict['DarkBremModel']          = mjson['sequence'][0]['dark_brem']['model']['name'] 
+            config_dict['DarkBremEpsilon']        = mjson['sequence'][0]['dark_brem']['model']['epsilon'] 
+            config_dict['DarkBremThreshold[GeV]'] = mjson['sequence'][0]['dark_brem']['model']['threshold'] 
+            config_dict['DarkBremOnePerEvent']    = mjson['sequence'][0]['dark_brem']['only_one_per_event'] 
+
         config_dict['DarkBremMethodXsecFactor'] = mjson['sequence'][0]['darkbrem_globalxsecfactor'] if config_dict['APrimeMass'] and 'darkbrem_globalxsecfactor' in  mjson['sequence'][0] else None
     
     #ok. over reco stuff, where parameter names can get confusing.
     # add here as more processors are included
     # not putting in protections here for every possible parameter name, better to let a test job fail if the parameter naming has changed
-    isRecon = False 
-    isTriggerSkim = False 
-    isBDTSkim = False 
-    if in_conf.get("IsTriggerSkim") :
-        if in_conf.get("IsTriggerSkim") == "Yes" :
-            isTriggerSkim=True
-    if in_conf.get("IsBDTSkim") :
-        if in_conf.get("IsBDTSkim") == "Yes" :
-            isBDTSkim=True
-            
+
+    isRecon = False #allow for checking this from parameter dump, if one exists
     for seq in mjson['sequence'] :
         procName=seq['className'].split('::')[1]  #remove namespace 
         if procName != "Simulator" :  #everything except simulation is reconstruction
@@ -213,7 +228,7 @@ def collect_from_json( infile, in_conf ):
 #            procName=procName.replace("ldmx::", "")
             procName=procName.replace("Producer", "")
             procName=procName.replace("Processor", "")
-        if procName == "EcalDigiProducer" :
+        if procName == "EcalDigi" :
             config_dict[procName+'Gain'] = seq['hgcroc']['gain']
             config_dict[procName+'ClockCycle[ns]'] = seq['hgcroc']['clockCycle']
             config_dict[procName+'Pedestal'] = seq['hgcroc']['pedestal']
@@ -232,48 +247,50 @@ def collect_from_json( infile, in_conf ):
             config_dict[procName+'TimeDnSlope'] = seq['hgcroc']['timeDnSlope']
             config_dict[procName+'TimePeak'] = seq['hgcroc']['timePeak']
             config_dict[procName+'DrainRate'] = seq['hgcroc']['drainRate']
-        elif procName == "EcalRecProducer" :
+        elif procName == "EcalRec" :
             config_dict[procName+'SecondOrderEnergyCorrection'] = seq['secondOrderEnergyCorrection']
             config_dict[procName+'ChargePerMIP'] = seq['charge_per_mip']
             config_dict[procName+'SiEnergyMIP'] = seq['mip_si_energy']
             config_dict[procName+'ClockCycle[ns]'] = seq['clock_cycle']
-        elif procName == "EcalVetoProcessor" :
+        elif procName == "EcalVeto" :
             config_dict[procName+'Layers'] = seq['num_ecal_layers']
             config_dict[procName+'DiscriminatorCut'] = seq['disc_cut']
             config_dict[procName+'BDTfile'] = seq['bdt_file']
             config_dict[procName+'DoBDT'] = seq['do_bdt']
-        elif procName == "HcalVetoProcessor" :
+        elif procName == "HcalVeto" :
             config_dict[procName+'MaxPE'] = seq['pe_threshold']
             config_dict[procName+'MaxTime[ns]'] = seq['max_time']
             config_dict[procName+'MaxDepth[mm]'] = seq['max_depth']
             config_dict[procName+'BackMinPE'] = seq['back_min_pe']
-        elif procName == "HcalDigiProducer" :
+        elif procName == "HcalDigi" :
             config_dict[procName+'MeanNoiseSiPM'] = seq['meanNoise']
             config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']
             config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
             config_dict[procName+'AttLength[m]'] = seq['strip_attenuation_length']
             config_dict[procName+'PosResolution[mm]'] = seq['strip_position_resolution']
-        elif procName == "TrigScintDigiProducer" :
+        elif procName == "TrigScintDigi" :
             config_dict[procName+'MeanNoiseSiPM'] = seq['mean_noise']
             config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']
             config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
-        elif procName == "TrigScintClusterProducer" :
+        elif procName == "TrigScintCluster" :
             config_dict[procName+'MaxWidth'] = seq['max_cluster_width']
             config_dict[procName+'SeedThreshold'] = seq['seed_threshold']
             config_dict[procName+'MinThreshold'] = seq['clustering_threshold']
-        elif procName == "TrigScintTrackProducer" :
+            config_dict[procName+'InputPassName'] = seq['input_pass_name']
+        elif procName == "TrigScintTrack" :
             config_dict[procName+'MaxDelta'] = seq['delta_max']
             config_dict[procName+'SeedingCollection'] = seq['seeding_collection']
             config_dict[procName+'MinThreshold'] = seq['tracking_threshold']
+            config_dict[procName+'InputPassName'] = seq['input_pass_name']
         elif procName == "TrackerHitKiller" :
             config_dict[procName+'Efficiency'] = seq['hitEfficiency']
-        elif procName == "TriggerProcessor" :
+        elif procName == "Trigger" :
             config_dict[procName+'MaxEnergy[MeV]'] = seq['threshold']
             config_dict[procName+'EcalEndLayer'] = seq['end_layer']
             config_dict[procName+'EcalStartLayer'] = seq['start_layer']
-        elif procName == "FindableTrackProcessor" :
+        elif procName == "FindableTrack" :
             config_dict[procName+'WasRun'] = 1
-        elif procName == "TrackerVetoProcessor" :
+        elif procName == "TrackerVeto" :
             config_dict[procName+'WasRun'] = 1
 
     det = 'v{DetectorVersion}'.format(**in_conf)
@@ -281,26 +298,39 @@ def collect_from_json( infile, in_conf ):
         if "RandomNumberSeedService" in cond['className'] :
             config_dict['RandomNumberSeedMode'] = cond['seedMode']
             config_dict['RandomNumberSeed'] = cond['seed']
-        elif "GeometryProvider" in cond['className'] :
+        elif "Geometry" in cond['className'] :
             #print("Looking in "+cond['className'])
-            condName=cond['className'].split("::")[1]
+            #condName=cond['className'].split("::")[1]
+            condName=cond['objectName']
 #            condName=condName.replace("ldmx::", "")
-            condName=condName.replace("Provider", "HexReadout")
+            condName=condName.replace("Provider", "")#"HexReadout")
             #print("Using condName "+condName)
-#
-            config_dict[condName+'Gap'] = cond['EcalHexReadout'][det]['gap']
-            config_dict[condName+'MinR'] = cond['EcalHexReadout'][det]['moduleMinR']
-            config_dict[condName+'FrontZ'] = cond['EcalHexReadout'][det]['ecalFrontZ']
-            config_dict[condName+'NumberCellRHeight'] = cond['EcalHexReadout'][det]['nCellRHeight']
+            if 'EcalHexReadout' in cond :
+                config_dict[condName+'Gap[mm]'] = cond['EcalHexReadout'][det]['gap']
+                config_dict[condName+'ModuleMinR[mm]'] = cond['EcalHexReadout'][det]['moduleMinR']
+                config_dict[condName+'FrontZ[mm]'] = cond['EcalHexReadout'][det]['ecalFrontZ']
+                config_dict[condName+'NumberCellRHeight[mm]'] = cond['EcalHexReadout'][det]['nCellRHeight']
+            elif 'HcalGeometry' in cond :
+                config_dict[condName+'ThicknessScint[mm]'] = cond['HcalGeometry'][det]['ThicknessScint']
+                config_dict[condName+'WidthScint[mm]'] = cond['HcalGeometry'][det]['WidthScint']
+                config_dict[condName+'EcalDx'] = cond['HcalGeometry'][det]['EcalDx']
+                config_dict[condName+'EcalDy'] = cond['HcalGeometry'][det]['EcalDy']
+                config_dict[condName+'NumSections'] = cond['HcalGeometry'][det]['NumSections']
+
+                
+        elif "Conditions" in cond['className'] :
+            if 'columns' in cond : 
+                for col in range(len(cond['columns'])) :
+                    config_dict[condName+'_'+cond['columns'][col]]=cond['entries']['values'][col]
 
     config_dict['IsRecon'] = isRecon
-    config_dict['IsTriggerSkim'] = isTriggerSkim
-    config_dict['IsBDTSkim'] = isBDTSkim
+
     config_dict['ROOTCompressionSetting'] = mjson['compressionSetting'] if 'compressionSetting' in mjson else None 
+    config_dict['PassName'] = mjson['passName']
 
     if 'maxEvents' in mjson and mjson['maxEvents'] > -1 :
         config_dict['NumberOfEvents'] = mjson['maxEvents']
-        #othersise we are most definitely using an input file and the number from there should be kept 
+        #otherwise we are most definitely using an input file and the number from there should be kept 
 
     logger.info(json.dumps(config_dict, indent = 2, sort_keys=True ))
     return config_dict
@@ -341,10 +371,10 @@ def set_remote_output(conf_dict, meta):
             pass
 
 def get_local_copy(conf_dict):
-    fname='./'+conf_dict['InputFile'].split(":")[1]
-    fullPath=conf_dict['InputDataLocationLocal']
-    os.system('cp '+fullPath+' '+fname)
-    logger.info("Copied local input file to node")
+    for infile in conf_dict['InputDataLocationLocal'].split(",") : 
+        logger.info("Copying local input file %s", infile )
+        os.system('cp '+infile+' .')
+        logger.info("Copied local input file %s to node", infile.split("/")[-1] )
     return
 
 def get_pileup_file(conf_dict):
@@ -422,6 +452,8 @@ def collect_madgraph_meta( conf_dict):
 
 def collect_meta(conf_dict, json_file):
 
+    #meta = {}
+    #if os.path.isfile(json_file) :
     meta = collect_from_json(json_file, conf_dict)
     meta['IsSimulation'] = True
 
@@ -429,9 +461,18 @@ def collect_meta(conf_dict, json_file):
     for fromconf in ['Scope', 'SampleId', 'BatchID', 'PhysicsProcess', 'DetectorVersion']:
         meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict else None
     meta['ElectronNumber'] = int(conf_dict['ElectronNumber']) if 'ElectronNumber' in conf_dict else None
-    if 'BeamEnergy' in conf_dict : 
+    if not 'BeamEnergy' in meta and 'BeamEnergy' in conf_dict : 
         meta['BeamEnergy'] = conf_dict['BeamEnergy']
         #else rely on it being copied..?
+    if not 'RunNumber' in meta and 'runNumber' in conf_dict :
+        meta['RunNumber'] = conf_dict['runNumber']
+    if not 'RandomSeed1' in meta and 'RandomSeed1' in conf_dict :
+        meta['RandomSeed1'] = conf_dict['RandomSeed1']
+    if not 'RandomSeed2' in meta and 'RandomSeed2' in conf_dict :
+        meta['RandomSeed2'] = conf_dict['RandomSeed2']
+    if ( not 'NumberOfEvents' in meta or meta['NumberOfEvents']<=0 ) and 'NumberOfEvents' in conf_dict :
+        meta['NumberOfEvents'] = conf_dict['NumberOfEvents']
+  
     meta['MagneticFieldmap'] = conf_dict['FieldMap'] if 'FieldMap' in conf_dict else None
     # env
     if 'ACCOUNTING_WN_INSTANCE' in os.environ:
@@ -491,13 +532,14 @@ def combine_meta( oldMeta, newMeta):
     for key in inputMeta : #.split(',') :
         metaOut[key] = inputMeta[key]
 
-    logger.debug('This should be the current job metadata:  {}'.format(newMeta))
+    logger.info('This should be the current job metadata:  {}'.format(newMeta))
 
     #overwrite anything that has been updated
     for key in newMeta:
         metaOut[key] = newMeta[key]
 
     logger.debug('Final metadata:  {}'.format(metaOut))
+#    logger.info('Final metadata:  {}'.format(metaOut))
 
 
     return metaOut 
@@ -593,7 +635,8 @@ if __name__ == '__main__':
         print_eval(conf_dict)
     elif cmd_args.action == 'copy-local':
         if 'InputDataLocationLocalRSE' in conf_dict :
-            get_local_copy( conf_dict )
+            if not conf_dict['InputDataLocationLocalRSE'].split(",")[0] == 'None'  :
+                get_local_copy( conf_dict )
 # turns out this is not needed
 #        if 'PileupLocationLocal' in conf_dict :
 #            get_pileup_file( conf_dict )
@@ -617,7 +660,7 @@ if __name__ == '__main__':
             meta['InputFile'] = conf_dict.get('InputFile')
             # combine the current job's metadata (meta) with the old one (inputMeta)
             meta=combine_meta( conf_dict.get('InputMetadata'), meta )
-#            meta=combine_meta( (conf_dict.get('InputMetadata')).get("inputMeta"), meta )
+            #meta=combine_meta( (conf_dict.get('InputMetadata')).get("inputMeta"), meta )
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
 

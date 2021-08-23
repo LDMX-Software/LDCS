@@ -3,7 +3,7 @@
 # Wrapper script for LDMX simulation
 #
 
-echo -e "ldmxsim.sh running on host $(/bin/hostname -f)\n"
+echo -e "ldmxsim_v1.7.sh running on host $(/bin/hostname -f)\n"
 
 # Check all files are present
 for f in "ldmxproduction.config" "ldmxjob.py" "ldmx-simprod-rte-helper.py"; do
@@ -52,12 +52,12 @@ python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
 
 #untar any madgraph lhe file library tarballs 
 find . -name LDMX_*.tar.gz -exec tar -xvzf {} \;
-#tar -xvzf LDMX_*.tar.gz
+
 
 
 # Start the simulation container
 echo -e "Starting Singularity image $SINGULARITY_IMAGE\n"
-singularity run $SINGULARITY_OPTIONS --home "$PWD" "$SINGULARITY_IMAGE" . ldmxjob.py
+singularity run $SINGULARITY_OPTIONS --home "$PWD" "$SINGULARITY_IMAGE" . ldmx-app ldmxjob.py
 RET=$?
 
 if [ $RET -ne 0 ]; then

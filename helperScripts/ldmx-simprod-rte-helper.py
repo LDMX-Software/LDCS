@@ -208,10 +208,11 @@ def collect_from_json( infile, in_conf ):
             #let these depend on if we are actually generating signal 
         if 'dark_brem' in  mjson['sequence'][0] :
             config_dict['APrimeMass[MeV]']       = mjson['sequence'][0]['dark_brem']['ap_mass'] 
-            config_dict['DarkBremMethod']         = mjson['sequence'][0]['dark_brem']['model']['method'] 
             config_dict['DarkBremModel']          = mjson['sequence'][0]['dark_brem']['model']['name'] 
-            config_dict['DarkBremEpsilon']        = mjson['sequence'][0]['dark_brem']['model']['epsilon'] 
-            config_dict['DarkBremThreshold[GeV]'] = mjson['sequence'][0]['dark_brem']['model']['threshold'] 
+            if not config_dict['DarkBremModel'] == "UNDEFINED" :
+                config_dict['DarkBremMethod']         = mjson['sequence'][0]['dark_brem']['model']['method'] 
+                config_dict['DarkBremEpsilon']        = mjson['sequence'][0]['dark_brem']['model']['epsilon'] 
+                config_dict['DarkBremThreshold[GeV]'] = mjson['sequence'][0]['dark_brem']['model']['threshold'] 
             config_dict['DarkBremOnePerEvent']    = mjson['sequence'][0]['dark_brem']['only_one_per_event'] 
 
         config_dict['DarkBremMethodXsecFactor'] = mjson['sequence'][0]['darkbrem_globalxsecfactor'] if config_dict['APrimeMass'] and 'darkbrem_globalxsecfactor' in  mjson['sequence'][0] else None

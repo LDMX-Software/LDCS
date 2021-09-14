@@ -229,25 +229,31 @@ def collect_from_json( infile, in_conf ):
 #            procName=procName.replace("ldmx::", "")
             procName=procName.replace("Producer", "")
             procName=procName.replace("Processor", "")
-        if procName == "EcalDigi" :
-            config_dict[procName+'Gain'] = seq['hgcroc']['gain']
+        if "calDigi" in procName and 'hgcroc' in seq :
+            if procName == "HcalDigi" :
+                config_dict[procName+'Gain'] = seq['avgGain']
+                config_dict[procName+'AttLength'] = seq['attenuationLength']
+            config_dict[procName+'MeV'] = seq['MeV']
+            config_dict[procName+'Pedestal'] = seq['avgPedestal']
+            config_dict[procName+'ReadoutThreshold'] = seq['avgReadoutThreshold']
+            #now read the stuff from the actual hgcroc entry 
             config_dict[procName+'ClockCycle[ns]'] = seq['hgcroc']['clockCycle']
-            config_dict[procName+'Pedestal'] = seq['hgcroc']['pedestal']
+            config_dict[procName+'ISOI'] = seq['hgcroc']['iSOI']
             config_dict[procName+'NumberADCs'] = seq['hgcroc']['nADCs']
-            config_dict[procName+'MaxADCrange'] = seq['hgcroc']['maxADCRange']
+            #config_dict[procName+'MaxADCrange'] = seq['hgcroc']['maxADCRange']
             config_dict[procName+'NoiseRMS'] = seq['hgcroc']['noiseRMS']
+            config_dict[procName+'WithNoise'] = seq['hgcroc']['noise']
             config_dict[procName+'TimingJitter'] = seq['hgcroc']['timingJitter']
-            config_dict[procName+'PadCapacitance'] = seq['hgcroc']['readoutPadCapacitance']
-            config_dict[procName+'ReadoutThreshold'] = seq['hgcroc']['readoutThreshold']
-            config_dict[procName+'TOAThreshold'] = seq['hgcroc']['toaThreshold']
-            config_dict[procName+'TOTThreshold'] = seq['hgcroc']['totThreshold']
-            config_dict[procName+'TOTMax'] = seq['hgcroc']['totMax']
+            #config_dict[procName+'PadCapacitance'] = seq['hgcroc']['readoutPadCapacitance']
+            #config_dict[procName+'TOAThreshold'] = seq['hgcroc']['toaThreshold']
+            #config_dict[procName+'TOTThreshold'] = seq['hgcroc']['totThreshold']
+            #config_dict[procName+'TOTMax'] = seq['hgcroc']['totMax']
             config_dict[procName+'RateUpSlope'] = seq['hgcroc']['rateUpSlope']
             config_dict[procName+'RateDnSlope'] = seq['hgcroc']['rateDnSlope']
             config_dict[procName+'TimeUpSlope'] = seq['hgcroc']['timeUpSlope']
             config_dict[procName+'TimeDnSlope'] = seq['hgcroc']['timeDnSlope']
             config_dict[procName+'TimePeak'] = seq['hgcroc']['timePeak']
-            config_dict[procName+'DrainRate'] = seq['hgcroc']['drainRate']
+            #config_dict[procName+'DrainRate'] = seq['hgcroc']['drainRate']
         elif procName == "EcalRec" :
             config_dict[procName+'SecondOrderEnergyCorrection'] = seq['secondOrderEnergyCorrection']
             config_dict[procName+'ChargePerMIP'] = seq['charge_per_mip']
@@ -263,12 +269,27 @@ def collect_from_json( infile, in_conf ):
             config_dict[procName+'MaxTime[ns]'] = seq['max_time']
             config_dict[procName+'MaxDepth[mm]'] = seq['max_depth']
             config_dict[procName+'BackMinPE'] = seq['back_min_pe']
-        elif procName == "HcalDigi" :
+        elif procName == "HcalRec" :
+            config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
+            config_dict[procName+'VoltagePerMIP'] = seq['voltage_per_mip']
+            config_dict[procName+'EnergyMIP'] = seq['mip_energy']
+            config_dict[procName+'ClockCycle[ns]'] = seq['clock_cycle']
+            config_dict[procName+'AvgTOAThreshold'] = seq['avgToaThreshold']             
+        elif procName == "HcalDigi" :   #keep for backwards compatibility for the no-hgcroc versions (<v3.0)
             config_dict[procName+'MeanNoiseSiPM'] = seq['meanNoise']
             config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']
             config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
             config_dict[procName+'AttLength[m]'] = seq['strip_attenuation_length']
             config_dict[procName+'PosResolution[mm]'] = seq['strip_position_resolution']
+        elif procName == "Overlay" :
+            config_dict[procName+'BunchSpacing[ns]'] = seq['bunchSpacing']
+            config_dict[procName+'DoPoissonIntime'] = seq['doPoissonIntime']
+            config_dict[procName+'DoPoissonOutoftime'] = seq['doPoissonOutoftime']
+            config_dict[procName+'NumberEarlierBunchesToSample'] = seq['nEarlierBunchesToSample']
+            config_dict[procName+'NumberLaterBunchesToSample'] = seq['nLaterBunchesToSample']
+            config_dict[procName+'TimeMean[ns]'] = seq['timeMean']
+            config_dict[procName+'TimeSpread[ns]'] = seq['timeSpread']
+            config_dict[procName+'TotalNumberOfInteractions'] = seq['totalNumberOfInteractions']
         elif procName == "TrigScintDigi" :
             config_dict[procName+'MeanNoiseSiPM'] = seq['mean_noise']
             config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']

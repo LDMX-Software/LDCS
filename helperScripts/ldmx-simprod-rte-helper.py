@@ -340,7 +340,7 @@ def collect_from_json( infile, in_conf ):
                 config_dict[condName+'NumSections'] = cond['HcalGeometry'][det]['NumSections']
 
                 
-        elif "Conditions" in cond['className'] :
+        elif "conditions" in cond['className'] :
             if 'columns' in cond : 
                 for col in range(len(cond['columns'])) :
                     config_dict[condName+'_'+cond['columns'][col]]=cond['entries']['values'][col]

@@ -342,8 +342,9 @@ def collect_from_json( infile, in_conf ):
                 
         elif "conditions" in cond['className'] :
             if 'columns' in cond : 
+                condName=cond['objectName']
                 for col in range(len(cond['columns'])) :
-                    config_dict[condName+'_'+cond['columns'][col]]=cond['entries']['values'][col]
+                    config_dict[condName+'_'+cond['columns'][col]]=cond['entries'][0]["values"][col]
 
     config_dict['IsRecon'] = isRecon
 

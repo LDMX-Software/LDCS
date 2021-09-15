@@ -87,7 +87,7 @@ def collect_from_json( infile, in_conf ):
     #function to convert json nested list to flat metadata list 
     config_dict = {}
 
-    #get a minimum of info to return in the case the parameter dump wasn't created (like v1.7 running)
+    #get a minimum of info from production config to return in the case the parameter dump wasn't created (like v1.7 running)
     isRecon = False 
     isTriggerSkim = False 
     isBDTSkim = False 
@@ -100,6 +100,8 @@ def collect_from_json( infile, in_conf ):
     if in_conf.get("IsRecon") :
         if in_conf.get("IsRecon") == "Yes" :
             isRecon=True
+    if in_conf.get("InputFilesPerJob") :
+        config_dict["NumberInputFiles"] = in_conf.get("InputFilesPerJob")
     config_dict['IsRecon'] = isRecon
     config_dict['IsTriggerSkim'] = isTriggerSkim
     config_dict['IsBDTSkim'] = isBDTSkim
@@ -119,9 +121,9 @@ def collect_from_json( infile, in_conf ):
         config_dict['GunPositionX[mm]']  = mjson['sequence'][0]['generators'][0]['position'][0] if 'position' in mjson['sequence'][0]['generators'][0] else None
         config_dict['GunPositionY[mm]']  = mjson['sequence'][0]['generators'][0]['position'][1] if 'position' in mjson['sequence'][0]['generators'][0] else None
         config_dict['GunPositionZ[mm]']  = mjson['sequence'][0]['generators'][0]['position'][2] if 'position' in mjson['sequence'][0]['generators'][0] else None
-        config_dict['MomentumVectorX'] = mjson['sequence'][0]['generators'][0]['direction'][0] if 'direction' in mjson['sequence'][0]['generators'][0] else None
-        config_dict['MomentumVectorY'] = mjson['sequence'][0]['generators'][0]['direction'][1] if 'direction' in mjson['sequence'][0]['generators'][0] else None
-        config_dict['MomentumVectorZ'] = mjson['sequence'][0]['generators'][0]['direction'][2] if 'direction' in mjson['sequence'][0]['generators'][0] else None
+        config_dict['MomentumVectorX[GeV]'] = mjson['sequence'][0]['generators'][0]['direction'][0] if 'direction' in mjson['sequence'][0]['generators'][0] else None
+        config_dict['MomentumVectorY[GeV]'] = mjson['sequence'][0]['generators'][0]['direction'][1] if 'direction' in mjson['sequence'][0]['generators'][0] else None
+        config_dict['MomentumVectorZ[GeV]'] = mjson['sequence'][0]['generators'][0]['direction'][2] if 'direction' in mjson['sequence'][0]['generators'][0] else None
         config_dict['BeamEnergy']    = mjson['sequence'][0]['generators'][0]['energy']  if 'energy' in mjson['sequence'][0]['generators'][0] else None
         config_dict['BeamParticle']  = mjson['sequence'][0]['generators'][0]['particle'] if 'particle' in mjson['sequence'][0]['generators'][0] else None
         #or, if we're using the multiparticle gun, which has different names and conventions for the same parameters
@@ -129,20 +131,20 @@ def collect_from_json( infile, in_conf ):
             config_dict['GunPositionX[mm]']  = mjson['sequence'][0]['generators'][0]['vertex'][0] if 'vertex' in mjson['sequence'][0]['generators'][0] else None
             config_dict['GunPositionY[mm]']  = mjson['sequence'][0]['generators'][0]['vertex'][1] if 'vertex' in mjson['sequence'][0]['generators'][0] else None
             config_dict['GunPositionZ[mm]']  = mjson['sequence'][0]['generators'][0]['vertex'][2] if 'vertex' in mjson['sequence'][0]['generators'][0] else None
-        if not config_dict['MomentumVectorX'] :
-            config_dict['MomentumVectorX'] = mjson['sequence'][0]['generators'][0]['momentum'][0] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
-            config_dict['MomentumVectorY'] = mjson['sequence'][0]['generators'][0]['momentum'][1] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
-            config_dict['MomentumVectorZ'] = mjson['sequence'][0]['generators'][0]['momentum'][2] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
+        if not config_dict['MomentumVectorX[GeV]'] :
+            config_dict['MomentumVectorX[GeV]'] = mjson['sequence'][0]['generators'][0]['momentum'][0] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
+            config_dict['MomentumVectorY[GeV]'] = mjson['sequence'][0]['generators'][0]['momentum'][1] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
+            config_dict['MomentumVectorZ[GeV]'] = mjson['sequence'][0]['generators'][0]['momentum'][2] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
         if not config_dict['BeamEnergy'] :   #preferred choice is to extract the beam energy from the numbers used, rather than pull it from the batch config which doesn't explicitly set it, and could thus be wrong
-            px = float( str(config_dict['MomentumVectorX']) )
-            py = float( str(config_dict['MomentumVectorY']) )
-            pz = float( str(config_dict['MomentumVectorZ']) )   #config_dict['MomentumVectorZ'])
+            px = float( str(config_dict['MomentumVectorX[GeV]']) )
+            py = float( str(config_dict['MomentumVectorY[GeV]']) )
+            pz = float( str(config_dict['MomentumVectorZ[GeV]']) )   #config_dict['MomentumVectorZ'])
             import math
             energy = int( math.sqrt( px*px + py*py + pz*pz ) + 0.5 )
             # now use this to normalise the momentum vector
-            config_dict['MomentumVectorX'] = px/energy
-            config_dict['MomentumVectorY'] = py/energy
-            config_dict['MomentumVectorZ'] = pz/energy
+            config_dict['MomentumVectorX[GeV]'] = px/energy
+            config_dict['MomentumVectorY[GeV]'] = py/energy
+            config_dict['MomentumVectorZ[GeV]'] = pz/energy
             #and then set the beam energy. first get the units right
             while energy > 999 :
                 energy = energy/1000.

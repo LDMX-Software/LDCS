@@ -102,6 +102,10 @@ def collect_from_json( infile, in_conf ):
             isRecon=True
     if in_conf.get("InputFilesPerJob") :
         config_dict["NumberInputFiles"] = in_conf.get("InputFilesPerJob")
+        if in_conf.get("NumberOfEvents") :
+            nEv=in_conf.get("NumberOfEvents")
+            nFiles=in_conf.get("InputFilesPerJob")
+            config_dict["NumberOfEvents"] = nEv*nFiles
     config_dict['IsRecon'] = isRecon
     config_dict['IsTriggerSkim'] = isTriggerSkim
     config_dict['IsBDTSkim'] = isBDTSkim

@@ -102,10 +102,6 @@ def collect_from_json( infile, in_conf ):
             isRecon=True
     if in_conf.get("InputFilesPerJob") :
         config_dict["NumberInputFiles"] = in_conf.get("InputFilesPerJob")
-        if in_conf.get("NumberOfEvents") :
-            nEv=in_conf.get("NumberOfEvents")
-            nFiles=in_conf.get("InputFilesPerJob")
-            config_dict["NumberOfEvents"] = nEv*nFiles
     config_dict['IsRecon'] = isRecon
     config_dict['IsTriggerSkim'] = isTriggerSkim
     config_dict['IsBDTSkim'] = isBDTSkim
@@ -567,13 +563,21 @@ def combine_meta( oldMeta, newMeta):
     for key in newMeta:
         metaOut[key] = newMeta[key]
 
+    #here: if we're combining input file, the oold number of events from them should be multiplied 
+    if metaOut.get("NumberofEvents") :
+        nEv=float(metaOut.get("NumberofEvents"))
+#        logger.info("got nEvents per file: %d", nEv)
+        if metaOut.get("NumberInputFiles") :
+            nFiles=int(newMeta.get("NumberInputFiles"))
+            metaOut["CombinedNumberOfEvents"] = nEv*nFiles
+
     logger.debug('Final metadata:  {}'.format(metaOut))
 #    logger.info('Final metadata:  {}'.format(metaOut))
 
 
     return metaOut 
     
-
+# deprecated 
 def combine_meta_fromFile( oldMetaFile, newMeta):
     metaOut={}
     #intialise all keys with values as pulled from the input file metadata

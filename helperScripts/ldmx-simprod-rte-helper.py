@@ -309,9 +309,20 @@ def collect_from_json( infile, in_conf ):
         elif procName == "TrackerHitKiller" :
             config_dict[procName+'Efficiency'] = seq['hitEfficiency']
         elif procName == "Trigger" :
-            config_dict[procName+'MaxEnergy[MeV]'] = seq['threshold']
+            if 'thresholds' in seq :
+                config_dict[procName+'MaxEnergy[MeV]'] = seq['thresholds']
+            else :
+                config_dict[procName+'MaxEnergy[MeV]'] = seq['threshold']
             config_dict[procName+'EcalEndLayer'] = seq['end_layer']
             config_dict[procName+'EcalStartLayer'] = seq['start_layer']
+        elif procName == "ElectronCounter" :
+            if  seq['use_simulated_electron_number']:
+                config_dict[procName+'UseSimElectronNb'] = True
+                config_dict[procName+'InputColl'] = None
+            else :
+                config_dict[procName+'UseSimElectronNb'] = False
+                config_dict[procName+'InputColl'] = seq['input_collection']+'_'+seq['input_pass_name']
+            config_dict[procName+'SimElectronNb'] = seq['simulated_electron_number']
         elif procName == "FindableTrack" :
             config_dict[procName+'WasRun'] = 1
         elif procName == "TrackerVeto" :

@@ -36,7 +36,7 @@ def parse_ldmx_config(config='ldmxjob.config'):
 #    if 'RandomSeed1' not in conf_dict or 'RandomSeed2' not in conf_dict:
 #        logger.error('RandomSeed1 and/or RandomSeed2 is not set in %s. Job aborted.', config)
 #        sys.exit(1)
-    # mandatory options
+    # no longer mandatory options
     for opt in ['DetectorVersion', 'FieldMap']:
         if opt not in conf_dict :
             if 'APrimeMass' in conf_dict: # don't need detector details for pure event library generation jobs 
@@ -47,7 +47,7 @@ def parse_ldmx_config(config='ldmxjob.config'):
     # ensure FileName is set to something
     if 'FileName' not in conf_dict:
         conf_dict['FileName'] = 'output.root'
-    #batch id will be used for storage directory structure. Should always be set.
+    #batch id will be used for storage directory structure. Should ALWAYS be set.
     if 'BatchID' not in conf_dict:
         logger.error('BatchID is not defined in the %s. Needed for storage directory structure. Job aborted.', config)
         sys.exit(1)
@@ -66,9 +66,7 @@ def print_eval(conf_dict):
                       'export ENERGIES="{IncidentEnergies}"'
                       .format(**conf_dict))
 
-    print( printString ) #'export DETECTOR="ldmx-det-full-v{DetectorVersion}-fieldmap-magnet"\n'
-          #'export FIELDMAP="{FieldMap}"\n'
-          #'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
+    print( printString )
 
 
 def calculate_md5_adler32_checksum(file, chunk_size=524288):
@@ -567,6 +565,14 @@ def combine_meta( oldMeta, newMeta):
 
     for key in inputMeta : #.split(',') :
         metaOut[key] = inputMeta[key]
+        # special cases: singularity image used for input file is very important. make a new key with that
+        # similarly, when continously reprocessing, need to keep track of what the input file was 
+        if key == "InputFile" or key == "LdmxImage":
+            if "EarlierStep"+key+"s"in metaOut :
+                metaOut["EarlierStep"+key+"s"]+=", "+inputMeta[key]
+            else :
+                metaOut["EarlierStep"+key+"s"]=inputMeta[key]
+
 
     logger.info('This should be the current job metadata:  {}'.format(newMeta))
 

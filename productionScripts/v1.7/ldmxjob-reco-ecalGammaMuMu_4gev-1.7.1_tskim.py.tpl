@@ -12,11 +12,12 @@ hcalVeto.parameters["collection_name"] = "HcalVeto"
 hcalVeto.parameters["max_time"] = 50.
 hcalVeto.parameters["max_depth"] = 4000.0
 hcalVeto.parameters["back_min_pe"] = 1.0
-simpleTrigger.parameters["threshold"] = 3160.0
+simpleTrigger.parameters["threshold"] = 1500.0
 simpleTrigger.parameters["end_layer"] = 20
 findable_track = ldmxcfg.Producer("findable", "ldmx::FindableTrackProcessor")
 p.sequence=[ecalDigis, simpleTrigger, trackerHitKiller, findable_track, hcalDigis, hcalVeto ]
-p.keep.append("drop MagnetScoringPlaneHits")
+p.skimDefaultIsDrop()
+p.skimConsider("simpleTrigger")
 p.inputFiles = [ INPUTFILE ]
 p.outputFiles = [ "simoutput.root" ]
 p.printMe()

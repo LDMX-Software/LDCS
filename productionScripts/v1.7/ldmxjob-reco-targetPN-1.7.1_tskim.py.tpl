@@ -17,6 +17,9 @@ simpleTrigger.parameters["end_layer"] = 20
 findable_track = ldmxcfg.Producer("findable", "ldmx::FindableTrackProcessor")
 p.sequence=[ecalDigis, simpleTrigger, trackerHitKiller, findable_track, hcalDigis, hcalVeto ]
 p.keep.append("drop MagnetScoringPlaneHits")
+p.keep.append("drop HcalScoringPlaneHits")
+p.skimDefaultIsDrop()
+p.skimConsider("simpleTrigger")
 p.inputFiles = [ INPUTFILE ]
 p.outputFiles = [ "simoutput.root" ]
 p.printMe()

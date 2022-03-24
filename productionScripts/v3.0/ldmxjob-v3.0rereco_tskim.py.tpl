@@ -99,6 +99,7 @@ eCount.input_pass_name=thisPassName
 
 #trigger skim
 simpleTrigger.start_layer= 0   #make sure it doesn't start from 1 (old default bug)
+simpleTrigger.input_pass=thisPassName
 p.skimDefaultIsDrop()
 p.skimConsider("simpleTrigger")
 

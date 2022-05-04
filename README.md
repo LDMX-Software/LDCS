@@ -7,7 +7,7 @@ This repo keeps:
 1. the run time environments
 2. the image pulling script
 3. the production scripts used for LDCS production, collected per ldmx-sw release version.
-
+4. the helper scripts used on the act machine for job submission
 
 
 

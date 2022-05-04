@@ -492,12 +492,20 @@ def collect_meta(conf_dict, json_file):
     meta['IsSimulation'] = True
 
     # conf
-    for fromconf in ['Scope', 'SampleId', 'BatchID', 'PhysicsProcess', 'DetectorVersion']:
-        meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict else None
-    meta['ElectronNumber'] = int(conf_dict['ElectronNumber']) if 'ElectronNumber' in conf_dict else None
+    #for fromconf in ['Scope', 'SampleId', 'BatchID', 'PhysicsProcess', 'DetectorVersion']:
+    for fromconf in ['Scope', 'BatchID', 'PhysicsProcess', 'DetectorVersion', 'ElectronNumber', 'BeamEnergy']:
+        try : 
+            if not fromconf in meta :
+                meta[fromconf] = conf_dict[fromconf] #if fromconf in conf_dict else None
+        except Exception as e:
+            logger.error('Failed to get mandatory key {} from job submission config: {}'.format(fromconf, str(e)))
+            return meta
+#    meta['ElectronNumber'] = int(conf_dict['ElectronNumber']) if 'ElectronNumber' in conf_dict else None
     if not 'BeamEnergy' in meta and 'BeamEnergy' in conf_dict : 
         meta['BeamEnergy'] = conf_dict['BeamEnergy']
         #else rely on it being copied..?
+    if not 'SampleId' in meta :  #allow this to no longer being explicitly set, but compiled from the rest 
+        meta['SampleId'] = 'v{}-{}GeV-{}e-{}'.format(meta['DetectorVersion'], meta['BeamEnergy'], meta['ElectronNumber'], meta['PhysicsProcess'])
     if not 'RunNumber' in meta and 'runNumber' in conf_dict :
         meta['RunNumber'] = conf_dict['runNumber']
     if not 'RandomSeed1' in meta and 'RandomSeed1' in conf_dict :

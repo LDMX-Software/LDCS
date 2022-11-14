@@ -399,6 +399,7 @@ def set_remote_output(conf_dict, meta):
         # If the "remote" site is actually local, skip uploading over gridftp,
         # while still registering it with that path for other jobs to retrieve 
         siteName=conf_dict['FinalOutputDestination'].split("_")[0].lower()
+        logger.info("From output dest %s, got site name %s", conf_dict['FinalOutputDestination'], siteName)
         if siteName in cehost.lower() :
             logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, infile )
             os.system('cp '+pfn+' .')

@@ -396,9 +396,16 @@ def set_remote_output(conf_dict, meta):
         meta['remote_output'] = {'rse': conf_dict['FinalOutputDestination'],
                                  'pfn': pfn}
         meta['DataLocation'] = pfn
-        # Add to ARC output list
-        with open('output.files', 'w') as f:
-            f.write('{} {}'.format(conf_dict['FileName'], pfn))
+        # If the "remote" site is actually local, skip uploading over gridftp,
+        # while still registering it with that path for other jobs to retrieve 
+        siteName=conf_dict['FinalOutputDestination'].split("_")[0].lower()
+        if siteName in cehost.lower() :
+            logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, infile )
+            os.system('cp '+pfn+' .')
+        else :
+            # Add to ARC output list
+            with open('output.files', 'w') as f:
+                f.write('{} {}'.format(conf_dict['FileName'], pfn))
     else:
         # Create empty output files list
         with open('output.files', 'w') as f:

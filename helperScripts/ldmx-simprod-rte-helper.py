@@ -386,13 +386,15 @@ def set_remote_output(conf_dict, meta):
     cehost = os.environ.get('GRID_GLOBAL_JOBHOST')
     if 'FinalOutputDestination' in conf_dict and 'FinalOutputBasePath' in conf_dict \
       and cehost not in conf_dict.get('NoUploadSites', '').split(','):
+        filepath=""
+        if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
+            filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+        else :
+            filepath += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
         pfn = conf_dict['FinalOutputBasePath']
         while pfn.endswith('/'):
             pfn = pfn[:-1]
-        if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
-            pfn += '/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
-        else :
-            pfn += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+        pfn += filepath
         meta['remote_output'] = {'rse': conf_dict['FinalOutputDestination'],
                                  'pfn': pfn}
         meta['DataLocation'] = pfn
@@ -402,7 +404,8 @@ def set_remote_output(conf_dict, meta):
         logger.info("From output dest %s, got site name %s", conf_dict['FinalOutputDestination'], siteName)
         if siteName in cehost.lower() :
             logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, pfn )
-            os.system('cp '+pfn+' .')
+            filepath=os.environ['LDMX_STORAGE_BASE']+filepath
+            os.system('cp '+filepath+' .')
         else :
             # Add to ARC output list
             with open('output.files', 'w') as f:

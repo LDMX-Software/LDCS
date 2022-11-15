@@ -401,7 +401,7 @@ def set_remote_output(conf_dict, meta):
         siteName=conf_dict['FinalOutputDestination'].split("_")[0].lower()
         logger.info("From output dest %s, got site name %s", conf_dict['FinalOutputDestination'], siteName)
         if siteName in cehost.lower() :
-            logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, infile )
+            logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, pfn )
             os.system('cp '+pfn+' .')
         else :
             # Add to ARC output list

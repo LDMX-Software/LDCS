@@ -406,13 +406,14 @@ def set_remote_output(conf_dict, meta):
         logger.info("From output dest %s, got site name %s", conf_dict['FinalOutputDestination'], siteName)
         if siteName in cehost.lower() :
             logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, pfn )
-            filepath=os.environ['LDMX_STORAGE_BASE']+filepath
-            os.system('mkdir -p '+filepath)
-            os.system('cp '+conf_dict['FileName']+' '+filepath+'/{name}'.format(**meta))
-        else :
-            # Add to ARC output list
-            with open('output.files', 'w') as f:
-                f.write('{} {}'.format(conf_dict['FileName'], pfn))
+#            filepath=os.environ['LDMX_STORAGE_BASE']+filepath
+            pfn=os.environ['LDMX_STORAGE_BASE']+filepath+'/{name}'.format(**meta)
+            #os.system('mkdir -p '+filepath)
+            #os.system('cp '+conf_dict['FileName']+' '+filepath+'/{name}'.format(**meta))
+        #else :
+        # Add to ARC output list
+        with open('output.files', 'w') as f:
+            f.write('{} {}'.format(conf_dict['FileName'], pfn))
     else:
         # Create empty output files list
         with open('output.files', 'w') as f:
@@ -500,13 +501,10 @@ def collect_madgraph_meta( conf_dict):
 
 def collect_meta(conf_dict, json_file):
 
-    #meta = {}
-    #if os.path.isfile(json_file) :
     meta = collect_from_json(json_file, conf_dict)
     meta['IsSimulation'] = True
 
     # conf
-    #for fromconf in ['Scope', 'SampleId', 'BatchID', 'PhysicsProcess', 'DetectorVersion']:
     for fromconf in ['Scope', 'BatchID', 'PhysicsProcess', 'DetectorVersion', 'ElectronNumber', 'BeamEnergy']:
         try : 
             if not fromconf in meta :
@@ -514,7 +512,6 @@ def collect_meta(conf_dict, json_file):
         except Exception as e:
             logger.error('Failed to get mandatory key {} from job submission config: {}'.format(fromconf, str(e)))
             return meta
-#    meta['ElectronNumber'] = int(conf_dict['ElectronNumber']) if 'ElectronNumber' in conf_dict else None
     if not 'BeamEnergy' in meta and 'BeamEnergy' in conf_dict : 
         meta['BeamEnergy'] = conf_dict['BeamEnergy']
         #else rely on it being copied..?
@@ -581,11 +578,10 @@ def combine_meta( oldMeta, newMeta):
     metaOut={}
     #intialise all keys with values as pulled from the input file metadata
     inputMeta= (json.loads(oldMeta)).get("inputMeta")
-    #    inputMeta= json.loads(oldMeta)
 
     logger.debug('This should be copied metadata:  {}'.format(inputMeta))
 
-    for key in inputMeta : #.split(',') :
+    for key in inputMeta : 
         metaOut[key] = inputMeta[key]
         # special cases: singularity image used for input file is very important. make a new key with that
         # similarly, when continously reprocessing, need to keep track of what the input file was 
@@ -602,16 +598,14 @@ def combine_meta( oldMeta, newMeta):
     for key in newMeta:
         metaOut[key] = newMeta[key]
 
-    #here: if we're combining input file, the oold number of events from them should be multiplied 
+    #here: if we're combining input files, the old number of events from them should be multiplied 
     if metaOut.get("NumberofEvents") :
         nEv=float(metaOut.get("NumberofEvents"))
-#        logger.info("got nEvents per file: %d", nEv)
         if metaOut.get("NumberInputFiles") :
             nFiles=int(newMeta.get("NumberInputFiles"))
             metaOut["CombinedNumberOfEvents"] = nEv*nFiles
 
     logger.debug('Final metadata:  {}'.format(metaOut))
-#    logger.info('Final metadata:  {}'.format(metaOut))
 
 
     return metaOut 

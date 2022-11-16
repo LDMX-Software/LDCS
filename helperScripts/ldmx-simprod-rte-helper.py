@@ -405,7 +405,7 @@ def set_remote_output(conf_dict, meta):
         if siteName in cehost.lower() :
             logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, pfn )
             filepath=os.environ['LDMX_STORAGE_BASE']+filepath
-            os.system('cp '+filepath+' .')
+            os.system('cp '+conf_dict['FileName']+' '+filepath)
         else :
             # Add to ARC output list
             with open('output.files', 'w') as f:

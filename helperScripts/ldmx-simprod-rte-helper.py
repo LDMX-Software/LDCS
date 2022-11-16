@@ -412,8 +412,8 @@ def set_remote_output(conf_dict, meta):
             os.system('cp '+conf_dict['FileName']+' '+pfn)
         else :
         # Add to ARC output list
-        with open('output.files', 'w') as f:
-            f.write('{} {}'.format(conf_dict['FileName'], pfn))
+            with open('output.files', 'w') as f:
+                f.write('{} {}'.format(conf_dict['FileName'], pfn))
     else:
         # Create empty output files list
         with open('output.files', 'w') as f:

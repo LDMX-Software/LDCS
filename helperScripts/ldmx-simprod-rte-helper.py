@@ -388,16 +388,18 @@ def set_remote_output(conf_dict, meta):
       and cehost not in conf_dict.get('NoUploadSites', '').split(','):
         filepath=""
         if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
-            filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+#            filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+            filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
         else :
-            filepath += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+            filepath += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
         pfn = conf_dict['FinalOutputBasePath']
         while pfn.endswith('/'):
             pfn = pfn[:-1]
-        pfn += filepath
+        pfn += filepath+'/{name}'.format(**meta)
         meta['remote_output'] = {'rse': conf_dict['FinalOutputDestination'],
                                  'pfn': pfn}
         meta['DataLocation'] = pfn
+
         # If the "remote" site is actually local, skip uploading over gridftp,
         # while still registering it with that path for other jobs to retrieve 
         siteName=conf_dict['FinalOutputDestination'].split("_")[0].lower()
@@ -405,7 +407,8 @@ def set_remote_output(conf_dict, meta):
         if siteName in cehost.lower() :
             logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, pfn )
             filepath=os.environ['LDMX_STORAGE_BASE']+filepath
-            os.system('cp '+conf_dict['FileName']+' '+filepath)
+            os.system('mkdir -p '+filepath)
+            os.system('cp '+conf_dict['FileName']+' '+filepath+'/{name}'.format(**meta))
         else :
             # Add to ARC output list
             with open('output.files', 'w') as f:

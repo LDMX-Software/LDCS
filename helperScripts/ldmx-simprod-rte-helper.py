@@ -384,40 +384,36 @@ def set_remote_output(conf_dict, meta):
     # Check for remote location and construct URL
     # GRID_GLOBAL_JOBHOST is available from ARC 6.8
     cehost = os.environ.get('GRID_GLOBAL_JOBHOST')
-    if 'FinalOutputDestination' in conf_dict and 'FinalOutputBasePath' in conf_dict \
-      and cehost not in conf_dict.get('NoUploadSites', '').split(','):
-        filepath=""
-        if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
-#            filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
-            filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
-        else :
-            filepath += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
-        pfn = conf_dict['FinalOutputBasePath']
-        while pfn.endswith('/'):
-            pfn = pfn[:-1]
-        pfn += filepath+'/{name}'.format(**meta)
-        meta['remote_output'] = {'rse': conf_dict['FinalOutputDestination'],
-                                 'pfn': pfn}
-        meta['DataLocation'] = pfn
+    with open('output.files', 'w') as f:
+        if 'FinalOutputDestination' in conf_dict and 'FinalOutputBasePath' in conf_dict \
+        and cehost not in conf_dict.get('NoUploadSites', '').split(','):
+            filepath=""
+            if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
+                #filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+                filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
+            else :
+                filepath += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
+            pfn = conf_dict['FinalOutputBasePath']
+            while pfn.endswith('/'):
+                pfn = pfn[:-1]
+            pfn += filepath+'/{name}'.format(**meta)
+            meta['remote_output'] = {'rse': conf_dict['FinalOutputDestination'],
+                                    'pfn': pfn}
+            meta['DataLocation'] = pfn
 
-        # If the "remote" site is actually local, skip uploading over gridftp,
-        # after registering it with that url for other jobs to retrieve 
-        siteName=conf_dict['FinalOutputDestination'].split("_")[0].lower()
-        logger.info("From output dest %s, got site name %s", conf_dict['FinalOutputDestination'], siteName)
-        if siteName in cehost.lower() :
-            filepath=os.environ['LDMX_STORAGE_BASE']+filepath
-            pfn=filepath+'/{name}'.format(**meta)
-            logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, pfn )
-            os.system('mkdir -p '+filepath)
-            os.system('cp '+conf_dict['FileName']+' '+pfn)
-        else :
-        # Add to ARC output list
-            with open('output.files', 'w') as f:
+            # If the "remote" site is actually local, skip uploading over gridftp,
+            # after registering it with that url for other jobs to retrieve
+            siteName=conf_dict['FinalOutputDestination'].split("_")[0].lower()
+            logger.info("From output dest %s, got site name %s", conf_dict['FinalOutputDestination'], siteName)
+            if siteName in cehost.lower() :
+                filepath=os.environ['LDMX_STORAGE_BASE']+filepath
+                pfn=filepath+'/{name}'.format(**meta)
+                logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, pfn )
+                os.system('mkdir -p '+filepath)
+                os.system('cp '+conf_dict['FileName']+' '+pfn)
+            else :
+                # Add to ARC output list
                 f.write('{} {}'.format(conf_dict['FileName'], pfn))
-    else:
-        # Create empty output files list
-        with open('output.files', 'w') as f:
-            pass
 
 def get_local_copy(conf_dict):
     for infile in conf_dict['InputDataLocationLocal'].split(",") : 

@@ -408,12 +408,12 @@ def set_remote_output(conf_dict, meta):
             if siteName in cehost.lower() :
                 filepath=os.environ['LDMX_STORAGE_BASE']+filepath
                 pfn=filepath+'/{name}'.format(**meta)
-            #    logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, pfn )
-            #    os.system('mkdir -p '+filepath)
-            #    os.system('cp '+conf_dict['FileName']+' '+pfn)
-            #else :
+                logger.info("At site %s, doing local copy of output file %s to final output destination", siteName, pfn )
+                os.system('mkdir -p '+filepath)
+                os.system('cp '+conf_dict['FileName']+' '+pfn)
+            else :
                 # Add to ARC output list
-            f.write('{} {}'.format(conf_dict['FileName'], pfn))
+                f.write('{} {}'.format(conf_dict['FileName'], pfn))
 
 def get_local_copy(conf_dict):
     for infile in conf_dict['InputDataLocationLocal'].split(",") : 

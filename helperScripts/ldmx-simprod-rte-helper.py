@@ -344,11 +344,11 @@ def collect_from_json( infile, in_conf ):
                 config_dict[condName+'FrontZ[mm]'] = cond['EcalHexReadout'][det]['ecalFrontZ']
                 config_dict[condName+'NumberCellRHeight[mm]'] = cond['EcalHexReadout'][det]['nCellRHeight']
             elif 'HcalGeometry' in cond :
-                config_dict[condName+'ThicknessScint[mm]'] = cond['HcalGeometry'][det]['ThicknessScint']
-                config_dict[condName+'WidthScint[mm]'] = cond['HcalGeometry'][det]['WidthScint']
-                config_dict[condName+'EcalDx'] = cond['HcalGeometry'][det]['EcalDx']
-                config_dict[condName+'EcalDy'] = cond['HcalGeometry'][det]['EcalDy']
-                config_dict[condName+'NumSections'] = cond['HcalGeometry'][det]['NumSections']
+                config_dict[condName+'ThicknessScint[mm]'] = cond['HcalGeometry'][det]['scint_thickness']
+                config_dict[condName+'WidthScint[mm]'] = cond['HcalGeometry'][det]['scint_width']
+                config_dict[condName+'EcalDx'] = cond['HcalGeometry'][det]['ecal_dx']
+                config_dict[condName+'EcalDy'] = cond['HcalGeometry'][det]['ecal_dy']
+                config_dict[condName+'NumSections'] = cond['HcalGeometry'][det]['num_sections']
 
                 
         elif "conditions" in cond['className'] :

@@ -343,7 +343,7 @@ def collect_from_json( infile, in_conf ):
                 config_dict[condName+'ModuleMinR[mm]'] = cond['EcalHexReadout'][det]['moduleMinR']
                 config_dict[condName+'FrontZ[mm]'] = cond['EcalHexReadout'][det]['ecalFrontZ']
                 config_dict[condName+'NumberCellRHeight[mm]'] = cond['EcalHexReadout'][det]['nCellRHeight']
-            elif 'HcalGeometry' in cond :
+            elif 'HcalGeometry' in cond and det in cond['HcalGeometry'] : 
                 config_dict[condName+'ThicknessScint[mm]'] = cond['HcalGeometry'][det]['scint_thickness']
                 config_dict[condName+'WidthScint[mm]'] = cond['HcalGeometry'][det]['scint_width']
                 config_dict[condName+'EcalDx'] = cond['HcalGeometry'][det]['ecal_dx']

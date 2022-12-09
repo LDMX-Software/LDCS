@@ -14,7 +14,7 @@ passName="dqm"
 p=ldmxcfg.Process(passName)
 p.run = RUNNUMBER
 p.inputFiles=[ INPUTNAME ]
-p.histogramFile="hist_output.root" 
+p.histogramFile="hist_simoutput.root" 
 
 from LDMX.DQM import dqm
 

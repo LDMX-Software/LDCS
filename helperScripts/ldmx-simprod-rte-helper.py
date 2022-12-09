@@ -540,8 +540,13 @@ def collect_meta(conf_dict, json_file):
     if not os.path.exists(conf_dict.get('FileName', '')):
         logger.error('Output file {} does not exist!'.format(conf_dict.get('FileName', '')))
         return meta
-
-    meta['name'] = 'mc_{SampleId}_run{RunNumber}_t{FileCreationTime}.root'.format(**meta)
+    if "hist_" in conf_dict.get('FileName') :
+        meta['name'] = 'hist_{SampleId}_run{RunNumber}_t{FileCreationTime}.root'.format(**meta)
+        meta['IsHistograms'] = True
+        #consider setting this. don't want to confuse this with thinking it might be data though
+        #meta['IsSimulation'] = False 
+    else :
+        meta['name'] = 'mc_{SampleId}_run{RunNumber}_t{FileCreationTime}.root'.format(**meta)
     set_remote_output(conf_dict, meta)
     if os.environ.get('KEEP_LOCAL_COPY'):
         data_location = os.environ['LDMX_STORAGE_BASE']

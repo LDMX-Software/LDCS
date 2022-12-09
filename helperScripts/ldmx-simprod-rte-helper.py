@@ -307,7 +307,7 @@ def collect_from_json( infile, in_conf ):
             config_dict[procName+'InputPassName'] = seq['input_pass_name']
         elif procName == "TrackerHitKiller" :
             config_dict[procName+'Efficiency'] = seq['hitEfficiency']
-        elif procName == "Trigger" :
+        elif procName == "Trigger" and not "dqm" in seq['className'].split('::')[0] :
             if 'thresholds' in seq :
                 config_dict[procName+'MaxEnergy[MeV]'] = seq['thresholds']
             else :

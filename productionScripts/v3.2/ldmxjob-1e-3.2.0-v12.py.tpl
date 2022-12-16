@@ -28,9 +28,8 @@ sim = simulator.simulator("mySim")
 #
 # Set the path to the detector to use (pulled from job config)
 #
-detector='ldmx-det-vDET'
-sim.setDetector( detector, True )
-sim.scoringPlanes = makeScoringPlanesPath(detector)
+sim.setDetector( 'ldmx-det-vDET', True )
+sim.scoringPlanes = makeScoringPlanesPath('ldmx-det-vDET')
 
 #
 # Set run parameters. These are all pulled from the job config 
@@ -67,14 +66,11 @@ sim.generators = [ mpgGen ]
 #reconstruction and vetoes 
 
 #Ecal and Hcal hardwired/geometry stuff
-#import LDMX.Ecal.EcalGeometry
 import LDMX.Ecal.ecal_hardcoded_conditions
 from LDMX.Ecal import EcalGeometry
-#egeom = EcalGeometry.EcalGeometryProvider.getInstance()
 #Hcal hardwired/geometry stuff
 from LDMX.Hcal import HcalGeometry
 import LDMX.Hcal.hcal_hardcoded_conditions
-#hgeom = HcalGeometry.HcalGeometryProvider.getInstance()
 
 
 from LDMX.Ecal import digi as eDigi
@@ -106,9 +102,18 @@ tsDigisTag  =TrigScintDigiProducer.pad2()
 tsDigisUp  =TrigScintDigiProducer.pad1()
 tsDigisDown  =TrigScintDigiProducer.pad3()
 
+tsDigisTag.input_collection="TriggerPadTagSimHits"
+tsDigisUp.input_collection="TriggerPadUpSimHits"
+tsDigisDown.input_collection="TriggerPadDnSimHits"
+
 tsClustersTag  =TrigScintClusterProducer.pad2()
 tsClustersUp  =TrigScintClusterProducer.pad1()
 tsClustersDown  =TrigScintClusterProducer.pad3()
+
+tsClustersTag.pad_time = -2.
+tsClustersUp.pad_time = 0.
+tsClustersDown.pad_time = 0.
+
 #tsDigisUp.verbosity=3
 #tsClustersUp.verbosity=3
 #trigScintTrack.verbosity=3

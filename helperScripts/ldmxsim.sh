@@ -44,11 +44,11 @@ if [ $? -ne 0 ]; then
 fi
 
 # Initialise some parameters
-eval $( python ldmx-simprod-rte-helper.py -c ldmxproduction.config init )
+eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config init )
 echo -e "Output data file is $OUTPUTDATAFILE\n"
 
 # Copy over local replica to the worker node (singularity can't see unmounted dirs like storage)
-python ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
+python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
 
 #untar any madgraph lhe file library tarballs 
 find . -name LDMX_*.tar.gz -exec tar -xvzf {} \;
@@ -68,7 +68,7 @@ fi
 echo -e "\nSingularity exited normally, proceeding with post-processing...\n"
 
 # Post processing to extract metadata for rucio
-eval $( python ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config  collect-metadata )
+eval $( python3 ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config  collect-metadata )
 if [ ! -z "$KEEP_LOCAL_COPY" ]; then
   if [ -z "$FINALOUTPUTFILE" ]; then
     echo "Post-processing script failed!"

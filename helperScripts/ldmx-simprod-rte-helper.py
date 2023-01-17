@@ -179,7 +179,7 @@ def collect_from_json( infile, in_conf ):
         for params in mjson['sequence'][0]['actions'] :
             p = params['class_name']
             key=p.split("::")[-1]  #these can be long :: separated name spaces and class names; get the last 
-            for k, val in params.iteritems() :
+            for k, val in params.items() :
                 if 'threshold' in k :
                     keepKey=key+"_"+k+'[MeV]'
                     config_dict[keepKey]=val
@@ -190,7 +190,7 @@ def collect_from_json( infile, in_conf ):
             for params in mjson['sequence'][0]['biasing_operators'] :
                 p = params['class_name']
                 key="Geant4Bias"+p.split("::")[-1]  #these can be long :: separated name spaces and class names; get the last
-                for k, val in params.iteritems() :
+                for k, val in params.items() :
                     if '_name' in k :
                         continue
                     keepKey=key+"_"+k

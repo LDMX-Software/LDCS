@@ -22,6 +22,10 @@ import LDMX.Ecal.ecal_hardcoded_conditions
 from LDMX.Hcal import HcalGeometry
 import LDMX.Hcal.hcal_hardcoded_conditions
 
+
+from LDMX.Recon.electronCounter import ElectronCounter
+from LDMX.Recon.simpleTrigger import simpleTrigger
+
 #
 # Set run parameters
 #

@@ -499,18 +499,9 @@ def collect_image_meta( conf_dict):
     meta["XERCESversion"]="3.2.3"
     meta["OSname"]="UBUNTU"
     meta["OSversion"]="18.04"
-    for fromconf in ["G4", "ROOT", "ONNX", "XERCES", "OS"]+"version"
-	meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict
-    for fromconf in ["OSname"]
+    for fromconf in ["G4version", "ROOTversion", "ONNXversion", "XERCESversion", "OSversion", "OSname"]
 	meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict
 
-    
-    meta["G4version"]=conf_dict["G4version"] if "G4version" in conf_dict else "10.2.3_v0.4"
-    meta["ROOTversion"]=conf_dict["ROOTversion"] if "ROOTversion" in conf_dict else "6.22.00"                                                          meta["ONNXversion"]=conf_dict["ONNXversion"] if "ONNXversion" in conf_dict else "1.3.0"
-    meta["XERCESversion"]=conf_dict["XERCESversion"] if "XERCESversion" in conf_dict else "3.2.3"
-    meta["OSname"]=conf_dict["OSname"] if "OSname" in conf_dict else "UBUNTU"
-    meta["OSversion"]=conf_dict["OSversion"] if "OSversion" in conf_dict else "18.04"
-                                                                  
     # we want the imagge to end up in:
     # user case -- user.$USER.image:myImageName.sif
     # production case -- prod.image:ldmx-pro....

@@ -493,14 +493,15 @@ def collect_image_meta( conf_dict):
 
     #for rucio, and for file naming?
     #start by setting up defaults 
-    meta["G4version"]="10.2.3_v0.4"
-    meta["ROOTversion"]="6.22.00" 
-    meta["ONNXversion"]="1.3.0"
-    meta["XERCESversion"]="3.2.3"
-    meta["OSname"]="UBUNTU"
-    meta["OSversion"]="18.04"
-    for fromconf in ["G4version", "ROOTversion", "ONNXversion", "XERCESversion", "OSversion", "OSname"] :
-	meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict
+    meta['G4version']='10.2.3_v0.4'
+    meta['ROOTversion']='6.22.00' 
+    meta['ONNXversion']='1.3.0'
+    meta['XERCESversion']='3.2.3'
+    meta['OSname']='UBUNTU'
+    meta['OSversion']='18.04'
+    for fromconf in ['G4version', 'ROOTversion', 'ONNXversion', 'XERCESversion', 'OSversion', 'OSname' ]:
+	if fromconf in conf_dict :
+            meta[fromconf] = conf_dict[fromconf] 
 
     # we want the imagge to end up in:
     # user case -- user.$USER.image:myImageName.sif

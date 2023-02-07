@@ -6,7 +6,11 @@
 echo -e "ldmxBuildImage.sh running on host $(/bin/hostname -f)\n"
 
 # Check all files are present
-for f in "ldmxproduction.config" "build_from_user_docker.sh" "ldmx-simprod-rte-helper.py"; do
+# TODO
+#  possibly rename the production config
+#  bypass submit requirement that a job template exists in bufferdir
+
+for f in "ldmxproduction.config" "ldmx-simprod-rte-helper.py"; do
   if [ ! -f "$f" ]; then
     echo "ERROR: LDMX Simulation production job requires $f file but it is missing" >&2
     exit 1
@@ -79,7 +83,7 @@ echo -e "\nSingularity exited normally, proceeding with post-processing...\n"
 
 # Post processing to extract metadata for rucio
 #eval $( python3 ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config  collect-metadata )
-eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config  collect-image-metadata )
+eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config  collect-metadata-image )
 if [ ! -z "$KEEP_LOCAL_COPY" ]; then
   if [ -z "$FINALOUTPUTFILE" ]; then
     echo "Post-processing script failed!"

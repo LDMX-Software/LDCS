@@ -36,7 +36,7 @@ def parse_ldmx_config(config='ldmxjob.config'):
 #    if 'RandomSeed1' not in conf_dict or 'RandomSeed2' not in conf_dict:
 #        logger.error('RandomSeed1 and/or RandomSeed2 is not set in %s. Job aborted.', config)
 #        sys.exit(1)
-    # no longer mandatory options
+    # ^^ no longer mandatory options
     for opt in ['DetectorVersion', 'FieldMap']:
         if opt not in conf_dict :
             if 'APrimeMass' in conf_dict: # don't need detector details for pure event library generation jobs 
@@ -46,7 +46,10 @@ def parse_ldmx_config(config='ldmxjob.config'):
                 sys.exit(1)
     # ensure FileName is set to something
     if 'FileName' not in conf_dict:
-        conf_dict['FileName'] = 'output.root'
+        conf_dict['FileName'] = 'output.sif'
+            # ensure FileName is set to something
+    if 'LdmxImage' not in conf_dict:
+        conf_dict['FileName'] = 'output.sif'
     #batch id will be used for storage directory structure. Should ALWAYS be set.
     if 'BatchID' not in conf_dict:
         logger.error('BatchID is not defined in the %s. Needed for storage directory structure. Job aborted.', config)
@@ -54,12 +57,39 @@ def parse_ldmx_config(config='ldmxjob.config'):
 
     return conf_dict
 
+# read ldmx.config to dict
+def parse_ldmx_imagebuild_config(config='ldmxjob.config'):
+    conf_dict = {}
+    with open(config, 'r') as conf_f:
+        for line in conf_f:
+            #allow sw versions to be a comma separated list of key=val pairs
+            pair = line.split(',') if "," in line else line 
+            for kv in pair.split('=', 2) :
+                if len(kv) != 2:
+                    logger.error('Malformed %s line: %s', config, line)
+                    continue
+                conf_dict[kv[0]] = kv[1].strip()
+    #some stuff is mandatory 
+    if not 'LdmxImage' in conf_dict:
+        logger.error('Image name ("LdmxImage") is not defined in the %s. Job aborted.', config)
+        sys.exit(1)
+    if not 'DockerRepo' in conf_dict:
+        logger.error('DockerHub repository ("DockerRepo") is not defined in the %s. Job aborted.', config)
+        sys.exit(1)
+    if not 'DockerTag' in conf_dict:
+        logger.error('DockerHub container tag ("DockerTag") is not defined in the %s. Job aborted.', config)
+        sys.exit(1)
+        
+    #we made it this far. admit that we're building an image
+    conf_dict['IsImage']=='True'
+
+    return conf_dict
 
 def print_eval(conf_dict, makeSingImage=False):
     if makeSingImage :
         printString= ('export DOCKER_REPO="{DockerRepo}"\n'
                       'export DOCKER_REPO="{DockerTag}"\n'
-                      'export OUTPUTDATAFILE="{ImageName}"'.format(**conf_dict))
+                      'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
     else :
         printString= ('export DETECTOR="ldmx-det-full-v{DetectorVersion}-fieldmap-magnet"\n'
                   'export FIELDMAP="{FieldMap}"\n'
@@ -397,6 +427,8 @@ def set_remote_output(conf_dict, meta):
             if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
                 #filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
                 filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
+            elif 'IsImage' in meta and meta['IsImage']=='True' :
+                filepath = '/{UserID}/{Scope}/{JobID}'.format(**meta)
             else :
                 filepath += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
             pfn = conf_dict['FinalOutputBasePath']
@@ -440,6 +472,78 @@ def get_pileup_file(conf_dict):
     return
 
 
+def collect_image_meta( conf_dict):
+
+    meta = {}
+    meta['IsImage'] = True
+    meta['IsSimulation'] = False
+    # rucio specifics
+    for fromconf in ['Scope', 'SampleId', 'JobID', 'FileName' ]:
+        meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict else None
+    # env
+    if 'ACCOUNTING_WN_INSTANCE' in os.environ:
+        meta['LdmxImage'] = os.environ['ACCOUNTING_WN_INSTANCE']
+    elif 'SINGULARITY_IMAGE' in os.environ:
+        meta['LdmxImage'] = os.environ['SINGULARITY_IMAGE'].split('/')[-1]
+    else :
+        meta['LdmxImage'] = None
+    meta['ARCCEJobID'] = os.environ['GRID_GLOBAL_JOBID'].split('/')[-1] if 'GRID_GLOBAL_JOBID' in os.environ else None
+    meta['FileCreationTime'] = int(time.time())
+    meta['Walltime'] = meta['FileCreationTime'] - job_starttime()
+
+    #for rucio, and for file naming?
+    meta["G4version"]=conf_dict["G4version"] if "G4version" in conf_dict else "10.2.3_v0.4"
+    meta["ROOTversion"]=conf_dict["ROOTversion"] if "ROOTversion" in conf_dict else "6.22.00"                                                          meta["ONNXversion"]=conf_dict["ONNXversion"] if "ONNXversion" in conf_dict else "1.3.0"
+    meta["XERCESversion"]=conf_dict["XERCESversion"] if "XERCESversion" in conf_dict else "3.2.3"
+    meta["OSname"]=conf_dict["OSname"] if "OSname" in conf_dict else "UBUNTU"
+    meta["OSversion"]=conf_dict["OSversion"] if "OSversion" in conf_dict else "18.04"
+                                                                  
+    # we want the imagge to end up in:
+    # user case -- user.$USER.image:myImageName.sif
+    # production case -- prod.image:ldmx-pro....
+    #
+    #  ... actually, this is a good time to leave this naming convention, and just use a short version tag also for prod images, so they are easy to look up/specify for later 
+    #image='ldmx-{DockerRepo}_{DockerTag}-gLDMX.{G4version}-r{ROOTversion}-onnx{ONNXversion}-xerces{XERCESversion}-{OSname}{OSversion}.sif'.format(**meta)
+    meta['UserID'] = "user."+os.environ['USER'] if os.environ['USER']!='admin' else "prod"
+    meta['Scope'] = meta['UserID']+".image"
+    meta['FileName'] =   meta['FileName']+".sif" if not ".sif" in meta['FileName'] #make sure the extension is there 
+    meta['name'] =   meta['FileName'] #if os.environ['USER']!='admin' else image 
+
+    # Check output file actually exists
+    if not os.path.exists( os.environ['OUTPUTFILENAME'] ) : 
+        logger.error('No output image exists!')
+        sys.exit(1)
+
+    conf_dict['FileName'] = meta['name']
+    os.system('mv '+os.environ['OUTPUTFILENAME']+' '+ meta['name']
+    set_remote_output(conf_dict, meta)
+    if os.environ.get('KEEP_LOCAL_COPY'):
+        data_location = os.environ['LDMX_STORAGE_BASE']
+        data_location += '/ldmx/{Scope}/{BatchID}/{name}'.format(**meta)
+        meta['local_replica'] = data_location
+        if 'DataLocation' in meta:
+            meta['DataLocation'] = ','.join([meta['DataLocation'], data_location])
+        else:
+            meta['DataLocation'] = data_location
+
+    if not meta.get('DataLocation'):
+        logger.error('No local or remote output location for output file, file will not be registered in Rucio')
+        sys.exit(1)
+
+    # Rucio metadata
+    meta['scope'] = meta['Scope']
+    meta['datasetscope'] = meta['Scope']
+    meta['datasetname'] = meta['JobID']
+    meta['containerscope'] = meta['Scope']
+    meta['containername'] = meta['SampleId']
+
+    meta['bytes'] = os.stat(conf_dict['FileName']).st_size
+    (meta['md5'], meta['adler32']) = calculate_md5_adler32_checksum(conf_dict['FileName'])
+
+    return meta
+
+
+
 def collect_madgraph_meta( conf_dict):
 
     meta = {}
@@ -466,6 +570,49 @@ def collect_madgraph_meta( conf_dict):
     # just add the tid for our purposes 
     uniqueOutName = 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
     # Check output file actually exists
+    # TODO: this case should not return the metadata, but an error code   
+    if not os.path.exists( mgOutName ) : #'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}.tar.gz'.format(**meta) ):
+        logger.error('Output tarball does not exist!')
+        return meta
+
+    meta['name'] = uniqueOutName #'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
+    conf_dict['FileName'] = meta['name']
+    os.system('mv '+mgOutName+' '+uniqueOutName)
+    set_remote_output(conf_dict, meta)
+    if os.environ.get('KEEP_LOCAL_COPY'):
+        data_location = os.environ['LDMX_STORAGE_BASE']
+        data_location += '/ldmx/lheFiles/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
+        meta['local_replica'] = data_location
+        if 'DataLocation' in meta:
+            meta['DataLocation'] = ','.join([meta['DataLocation'], data_location])
+        else:
+            meta['DataLocation'] = data_location
+
+    if not meta.get('DataLocation'):
+        logger.error('No local or remote output location for output file, file will not be registered in Rucio')
+        return meta
+
+    # Rucio metadata
+    meta['scope'] = meta['Scope']
+    meta['datasetscope'] = meta['Scope']
+    meta['datasetname'] = meta['BatchID']
+    meta['containerscope'] = meta['Scope']
+    meta['containername'] = meta['SampleId']
+
+    meta['bytes'] = os.stat(conf_dict['FileName']).st_size
+    (meta['md5'], meta['adler32']) = calculate_md5_adler32_checksum(conf_dict['FileName'])
+
+    return meta
+    meta['ARCCEJobID'] = os.environ['GRID_GLOBAL_JOBID'].split('/')[-1] if 'GRID_GLOBAL_JOBID' in os.environ else None
+    meta['FileCreationTime'] = int(time.time())
+    meta['Walltime'] = meta['FileCreationTime'] - job_starttime()
+
+    # the job run in the image sets up the output name like this:
+    mgOutName = 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}.tar.gz'.format(**meta)
+    # just add the tid for our purposes 
+    uniqueOutName = 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
+    # Check output file actually exists
+    # TODO: this case should not return the metadata, but an error code   
     if not os.path.exists( mgOutName ) : #'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}.tar.gz'.format(**meta) ):
         logger.error('Output tarball does not exist!')
         return meta
@@ -673,6 +820,9 @@ def get_parser():
                         help='Retrieved Rucio metadata JSON file (associated with job input file)')
     parser.add_argument('-j', '--json-metadata', action='store', default='rucio.metadata',
                         help='LDMX Production simulation JSON metadata file')
+    parser.add_argument('-I', '--makeImage', action='store', default=False,
+                        help='boolean flag to indicate a singularity image build job')
+
     parser.add_argument('action', choices=['init', 'copy-local', 'collect-metadata', 'collect-metadata-madgraph', 'collect-metadata-image', 'test'],
                         help='Helper action to perform')
     return parser
@@ -684,8 +834,14 @@ if __name__ == '__main__':
     loglevel = getattr(logging, cmd_args.debug, 30)
     logger.setLevel(loglevel)
 
-    # config is parsed for any action
-    conf_dict = parse_ldmx_config(cmd_args.config)
+    makeImage=False 
+    if cmd_args.makeImage : #running an image building job, rather than production
+        makeImage=True 
+    # config is parsed the same way for any action... except image building which is very different 
+    if makeImage :
+        conf_dict = parse_ldmx_imagebuild_config(cmd_args.config)
+    else :
+        conf_dict = parse_ldmx_config(cmd_args.config)
 
     # metadata extraction from job parameter dump: note, in local test mode, we pull input metadata from a file 
     if cmd_args.action == 'test' :
@@ -705,7 +861,7 @@ if __name__ == '__main__':
         # store job start time
         job_starttime()
         # print values for bash eval
-        print_eval(conf_dict)
+        print_eval(conf_dict, makeImage)
     elif cmd_args.action == 'copy-local':
         if 'InputDataLocationLocalRSE' in conf_dict :
             if not conf_dict['InputDataLocationLocalRSE'].split(",")[0] == 'None'  :
@@ -718,7 +874,11 @@ if __name__ == '__main__':
         meta = collect_madgraph_meta(conf_dict)
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
-
+    elif cmd_args.action == 'collect-metadata-image':
+        meta = collect_image_meta(conf_dict)
+        with open(cmd_args.json_metadata, 'w') as meta_f:
+            json.dump(meta, meta_f)
+            
     elif cmd_args.action == 'collect-metadata':
         meta = collect_meta(conf_dict, cmd_args.metaDump)
         if 'local_replica' in meta:

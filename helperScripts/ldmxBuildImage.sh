@@ -38,7 +38,7 @@ fi
 
 # Initialise some parameters
 # potentially have a separate init function for image building 
-eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config init )
+eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config init --makeImage )
 if [ -z "$OUTPUTDATAFILE" ]; then
 	echo "ERROR: Job config must define output image name"
 	exit 1
@@ -54,7 +54,9 @@ if [ -z "${DOCKER_TAG}" ]; then
 echo -e	"Using DockerHub container tag ${DOCKER_TAG}"
 
 # Copy over local replica to the worker node (singularity can't see unmounted dirs like storage)
-python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
+# not needed for the image generation step but for using it later 
+# python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
+
 
 # The dependency versions are set in the docker container ldmx/dev
 # Parsing these versions out of that container is very difficult, so
@@ -67,7 +69,8 @@ export SINGULARITY_CACHEDIR=${PWD}/.singularity
 mkdir -p ${SINGULARITY_CACHEDIR} #make sure cache directory exists
 
 #build the image from the repo 
-image="${_image_name}.sif"
+image="${$OUTPUTDATAFILE}.sif"
+image=$(sed -e 's/.sif.sif/.sif/g' <<< $image)
 location="docker://${DOCKER_REPO}:${DOCKER_TAG}"
 echo "pulling from DockerHub $location to build singularity image $image"
 

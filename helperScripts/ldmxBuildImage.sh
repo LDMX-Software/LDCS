@@ -38,7 +38,7 @@ fi
 
 # Initialise some parameters
 # potentially have a separate init function for image building 
-eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config init --makeImage )
+eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config --makeImage init )
 if [ -z "$OUTPUTDATAFILE" ]; then
 	echo "ERROR: Job config must define output image name"
 	exit 1

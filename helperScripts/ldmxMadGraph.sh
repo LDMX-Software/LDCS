@@ -3,7 +3,7 @@
 # Wrapper script for LDMX simulation
 #
 
-echo -e "ldmxsim.sh running on host $(/bin/hostname -f)\n"
+echo -e "ldmxMadgraph.sh running on host $(/bin/hostname -f)\n"
 
 # Check all files are present
 for f in "ldmxproduction.config" "ldmxjob.py" "ldmx-simprod-rte-helper.py"; do

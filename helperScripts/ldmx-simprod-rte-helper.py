@@ -55,16 +55,21 @@ def parse_ldmx_config(config='ldmxjob.config'):
     return conf_dict
 
 
-def print_eval(conf_dict):
-    printString= ('export DETECTOR="ldmx-det-full-v{DetectorVersion}-fieldmap-magnet"\n'
+def print_eval(conf_dict, makeSingImage=False):
+    if makeSingImage :
+        printString= ('export DOCKER_REPO="{DockerRepo}"\n'
+                      'export DOCKER_REPO="{DockerTag}"\n'
+                      'export OUTPUTDATAFILE="{ImageName}"'.format(**conf_dict))
+    else :
+        printString= ('export DETECTOR="ldmx-det-full-v{DetectorVersion}-fieldmap-magnet"\n'
                   'export FIELDMAP="{FieldMap}"\n'
                   'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
-    if 'APrimeMass' in conf_dict :
-        printString+=('\nexport APMASS="{APrimeMass}"\n'
-                      'export NEVENTS="{NumberOfEvents}"\n'
-                      'export RUNNB="{runNumber}"\n'
-                      'export ENERGIES="{IncidentEnergies}"'
-                      .format(**conf_dict))
+        if 'APrimeMass' in conf_dict :
+            printString+=('\nexport APMASS="{APrimeMass}"\n'
+                          'export NEVENTS="{NumberOfEvents}"\n'
+                          'export RUNNB="{runNumber}"\n'
+                          'export ENERGIES="{IncidentEnergies}"'
+                          .format(**conf_dict))
 
     print( printString )
 
@@ -668,7 +673,7 @@ def get_parser():
                         help='Retrieved Rucio metadata JSON file (associated with job input file)')
     parser.add_argument('-j', '--json-metadata', action='store', default='rucio.metadata',
                         help='LDMX Production simulation JSON metadata file')
-    parser.add_argument('action', choices=['init', 'copy-local', 'collect-metadata', 'collect-metadata-madgraph', 'test'],
+    parser.add_argument('action', choices=['init', 'copy-local', 'collect-metadata', 'collect-metadata-madgraph', 'collect-metadata-image', 'test'],
                         help='Helper action to perform')
     return parser
 

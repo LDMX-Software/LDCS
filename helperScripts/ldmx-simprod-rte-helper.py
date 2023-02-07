@@ -70,8 +70,8 @@ def parse_ldmx_imagebuild_config(config='ldmxjob.config'):
                     continue
                 conf_dict[kv[0]] = kv[1].strip()
     #some stuff is mandatory 
-    if not 'LdmxImage' in conf_dict:
-        logger.error('Image name ("LdmxImage") is not defined in the %s. Job aborted.', config)
+    if not 'FileName' in conf_dict:
+        logger.error('Output image name ("FileName") is not defined in the %s. Job aborted.', config)
         sys.exit(1)
     if not 'DockerRepo' in conf_dict:
         logger.error('DockerHub repository ("DockerRepo") is not defined in the %s. Job aborted.', config)

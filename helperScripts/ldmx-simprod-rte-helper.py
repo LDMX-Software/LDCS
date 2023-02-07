@@ -492,6 +492,19 @@ def collect_image_meta( conf_dict):
     meta['Walltime'] = meta['FileCreationTime'] - job_starttime()
 
     #for rucio, and for file naming?
+    #start by setting up defaults 
+    meta["G4version"]="10.2.3_v0.4"
+    meta["ROOTversion"]="6.22.00" 
+    meta["ONNXversion"]="1.3.0"
+    meta["XERCESversion"]="3.2.3"
+    meta["OSname"]="UBUNTU"
+    meta["OSversion"]="18.04"
+    for fromconf in ["G4", "ROOT", "ONNX", "XERCES", "OS"]+"version"
+	meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict
+    for fromconf in ["OSname"]
+	meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict
+
+    
     meta["G4version"]=conf_dict["G4version"] if "G4version" in conf_dict else "10.2.3_v0.4"
     meta["ROOTversion"]=conf_dict["ROOTversion"] if "ROOTversion" in conf_dict else "6.22.00"                                                          meta["ONNXversion"]=conf_dict["ONNXversion"] if "ONNXversion" in conf_dict else "1.3.0"
     meta["XERCESversion"]=conf_dict["XERCESversion"] if "XERCESversion" in conf_dict else "3.2.3"

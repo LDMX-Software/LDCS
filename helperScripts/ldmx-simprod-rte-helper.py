@@ -499,7 +499,7 @@ def collect_image_meta( conf_dict):
     meta["XERCESversion"]="3.2.3"
     meta["OSname"]="UBUNTU"
     meta["OSversion"]="18.04"
-    for fromconf in ["G4version", "ROOTversion", "ONNXversion", "XERCESversion", "OSversion", "OSname"]
+    for fromconf in ["G4version", "ROOTversion", "ONNXversion", "XERCESversion", "OSversion", "OSname"] :
 	meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict
 
     # we want the imagge to end up in:

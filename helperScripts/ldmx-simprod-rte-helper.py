@@ -79,7 +79,10 @@ def parse_ldmx_imagebuild_config(config='ldmxjob.config'):
     if not 'DockerTag' in conf_dict:
         logger.error('DockerHub container tag ("DockerTag") is not defined in the %s. Job aborted.', config)
         sys.exit(1)
-        
+    if not 'UserID' in conf_dict:
+        logger.error('aCT user ID ("UserID") is not defined in the %s. Job aborted.', config)
+        sys.exit(1)
+
     #we made it this far. admit that we're building an image
     conf_dict['IsImage']=='True'
 

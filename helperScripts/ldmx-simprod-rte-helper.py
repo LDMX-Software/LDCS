@@ -59,18 +59,14 @@ def parse_ldmx_config(config='ldmxjob.config'):
 
 # read ldmx.config to dict
 def parse_ldmx_imagebuild_config(config='ldmxjob.config'):
+
+    logger.info('In image building config parsing funcion')
     conf_dict = {}
     with open(config, 'r') as conf_f:
         for line in conf_f:
-            #allow sw versions to be a comma separated list of key=val pairs
-            #if "," not in line :
-            #    line=line+', '
-            #for pair in line.split(',') : #if "," in line else line :
-            #    logger.info('trying to parse pair %s', pair)
             kv = line.split('=', 2) 
             if len(kv) != 2:
                 logger.error('Malformed line %s in config %s', line, config)
-                #logger.error('Malformed pair %s from line %s, in config %s', pair, line, config)
                 continue
             conf_dict[kv[0]] = kv[1].strip()
     #some stuff is mandatory 

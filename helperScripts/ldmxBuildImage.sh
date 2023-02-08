@@ -38,7 +38,7 @@ fi
 
 # Initialise some parameters
 # potentially have a separate init function for image building 
-eval $( python3 ldmx-simprod-rte-helper.py --makeImage -c ldmxproduction.config init )
+eval $( python3 ldmx-simprod-rte-helper.py --makeImage --debugLevel DEBUG -c ldmxproduction.config init )
 if [ -z "${OUTPUTDATAFILE}" ]; then
 	echo "ERROR: Job config must define output image name"
 	exit 1
@@ -88,7 +88,7 @@ echo -e "\nSingularity exited normally, proceeding with post-processing...\n"
 
 # Post processing to extract metadata for rucio
 #eval $( python3 ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config  collect-metadata )
-eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config  -d DEBUG collect-metadata-image )
+eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config --debugLevel DEBUG collect-metadata-image )
 if [ ! -z "$KEEP_LOCAL_COPY" ]; then
   if [ -z "$FINALOUTPUTFILE" ]; then
     echo "Post-processing script failed!"

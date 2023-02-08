@@ -63,7 +63,9 @@ def parse_ldmx_imagebuild_config(config='ldmxjob.config'):
     with open(config, 'r') as conf_f:
         for line in conf_f:
             #allow sw versions to be a comma separated list of key=val pairs
-            for pair in line.split(',') if "," in line else line :
+            if "," not in line :
+                line=line+','
+            for pair in line.split(',') : #if "," in line else line :
                 logger.debug('trying to parse pair %s', pair)
                 for kv in pair.split('=', 2) :
                     if len(kv) != 2:

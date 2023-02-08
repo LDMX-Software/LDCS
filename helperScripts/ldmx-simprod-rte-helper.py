@@ -510,7 +510,7 @@ def collect_image_meta( conf_dict):
     #
     #  ... actually, this is a good time to leave this naming convention, and just use a short version tag also for prod images, so they are easy to look up/specify for later 
     #image='ldmx-{DockerRepo}_{DockerTag}-gLDMX.{G4version}-r{ROOTversion}-onnx{ONNXversion}-xerces{XERCESversion}-{OSname}{OSversion}.sif'.format(**meta)
-    meta['UserID'] = "user."+os.environ['USER'] if os.environ['USER']!='admin' else "prod"
+    #meta['UserID'] = "user."+os.environ['USER'] if os.environ['USER']!='admin' else "prod"
     meta['Scope'] = meta['UserID']+".image"
     if ".sif" not in meta['FileName'] : #make sure the extension is there
         meta['FileName'] =   meta['FileName']+".sif" 

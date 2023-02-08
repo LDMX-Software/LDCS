@@ -851,7 +851,7 @@ if __name__ == '__main__':
     # config is parsed the same way for any action... except image building which is very different 
     # if running an image building job, rather than production
     if cmd_args.makeImage : # makeImage :
-        logger.debug("Running config parsing for image building")
+        logger.info("Running config parsing for image building")
         conf_dict = parse_ldmx_imagebuild_config(cmd_args.config)
     else :
         conf_dict = parse_ldmx_config(cmd_args.config)
@@ -888,7 +888,7 @@ if __name__ == '__main__':
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
     elif cmd_args.action == 'collect-metadata-image' :
-        logger.debug("Running image metadata collection")
+        logger.info("Running image metadata collection")
         meta = collect_image_meta(conf_dict)
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)

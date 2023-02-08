@@ -64,9 +64,10 @@ def parse_ldmx_imagebuild_config(config='ldmxjob.config'):
         for line in conf_f:
             #allow sw versions to be a comma separated list of key=val pairs
             for pair in line.split(',') if "," in line else line :
+                logger.debug('trying to parse pair %s', pair)
                 for kv in pair.split('=', 2) :
                     if len(kv) != 2:
-                        logger.error('Malformed %s line: %s', config, line)
+                        logger.error('Malformed pair %s from line %s, in config %s', pair, line, config)
                         continue
                     conf_dict[kv[0]] = kv[1].strip()
     #some stuff is mandatory 

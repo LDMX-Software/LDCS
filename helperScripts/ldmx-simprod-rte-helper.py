@@ -426,7 +426,7 @@ def set_remote_output(conf_dict, meta):
             filepath=""
             if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
                 filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
-            elif 'IsImage' in meta and meta['IsImage']=='True' :
+            elif 'IsImage' in meta and (meta['IsImage']=='True' or meta['IsImage']=='Yes') :
                 filepath = '/{UserID}/{Scope}/{JobID}'.format(**meta)
             else :
                 filepath += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
@@ -516,15 +516,16 @@ def collect_image_meta( conf_dict):
         meta['FileName'] =   meta['FileName']+".sif" 
     meta['name'] =   meta['FileName'] #if os.environ['USER']!='admin' else image 
 
-    # Check output file actually exists
-    if not os.path.exists( os.environ['OUTPUTDATAFILE']+'.sif' ) : 
-        if not os.path.exists( os.environ['OUTPUTDATAFILE'] ) :
-            logger.error('No output image named '+os.environ['OUTPUTDATAFILE']+'(.sif)'+' exists!')
-            sys.exit(1)
+    # Check output file actually exists, either under the right name already, or we can rename it 
+    if not os.path.exists( meta['name'] ):
+        if not os.path.exists( os.environ['OUTPUTDATAFILE']+'.sif' ) : 
+            if not os.path.exists( os.environ['OUTPUTDATAFILE'] ) :
+                logger.error('No output image named '+os.environ['OUTPUTDATAFILE']+'(.sif)'+' exists!')
+                sys.exit(1)
+            else :
+                os.system('mv '+os.environ['OUTPUTDATAFILE']+' '+meta['name'])
         else :
-            os.system('mv '+os.environ['OUTPUTDATAFILE']+' '+meta['name'])
-    else :
-        os.system('mv '+os.environ['OUTPUTDATAFILE']+'.sif '+ meta['name'])
+            os.system('mv '+os.environ['OUTPUTDATAFILE']+'.sif '+ meta['name'])
 
     conf_dict['FileName'] = meta['name']
     set_remote_output(conf_dict, meta)

@@ -803,7 +803,10 @@ if __name__ == '__main__':
     #    makeImage=True 
     # config is parsed the same way for any action... except image building which is very different 
     # if running an image building job, rather than production
-    if not cmd_args.makeImage : 
+    if cmd_args.makeImage : 
+        logger.debug("Running config parsing for image building")
+        conf_dict = parse_ldmx_imagebuild_config(cmd_args.config)
+    else :
         conf_dict = parse_ldmx_config(cmd_args.config)
 
     # metadata extraction from job parameter dump: note, in local test mode, we pull input metadata from a file 
@@ -824,9 +827,6 @@ if __name__ == '__main__':
         # store job start time
         job_starttime()
         # print values for bash eval
-        if cmd_args.makeImage : # move this here to only run it once for image building 
-            logger.debug("Running config parsing for image building")
-            conf_dict = parse_ldmx_imagebuild_config(cmd_args.config)
         print_eval(conf_dict, cmd_args.makeImage)
     elif cmd_args.action == 'copy-local':
         if 'InputDataLocationLocalRSE' in conf_dict :

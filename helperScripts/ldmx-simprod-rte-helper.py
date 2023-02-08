@@ -511,7 +511,8 @@ def collect_image_meta( conf_dict):
     #image='ldmx-{DockerRepo}_{DockerTag}-gLDMX.{G4version}-r{ROOTversion}-onnx{ONNXversion}-xerces{XERCESversion}-{OSname}{OSversion}.sif'.format(**meta)
     meta['UserID'] = "user."+os.environ['USER'] if os.environ['USER']!='admin' else "prod"
     meta['Scope'] = meta['UserID']+".image"
-    meta['FileName'] =   meta['FileName']+".sif" if not ".sif" in meta['FileName'] #make sure the extension is there 
+    if ".sif" not in meta['FileName'] : #make sure the extension is there
+        meta['FileName'] =   meta['FileName']+".sif" 
     meta['name'] =   meta['FileName'] #if os.environ['USER']!='admin' else image 
 
     # Check output file actually exists

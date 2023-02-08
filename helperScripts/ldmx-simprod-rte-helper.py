@@ -430,7 +430,7 @@ def set_remote_output(conf_dict, meta):
             if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
                 filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
             elif 'IsImage' in meta and (meta['IsImage']=='True' or conf_dict['IsImage']=='Yes') :
-                filepath = '/{UserID}/{Scope}/{JobID}'.format(**meta)
+                filepath = '/{UserID}/{Scope}/{BatchID}'.format(**meta)
             else :
                 filepath += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
             pfn = conf_dict['FinalOutputBasePath']
@@ -481,7 +481,7 @@ def collect_image_meta( conf_dict):
     meta['IsSimulation'] = False
     meta['IsRecon'] = False
     # rucio specifics
-    for fromconf in ['Scope', 'SampleId', 'UserID', 'JobID', 'FileName' ]:
+    for fromconf in ['Scope', 'SampleId', 'UserID', 'BatchID', 'FileName' ]:
         meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict else None
     # env
     if 'ACCOUNTING_WN_INSTANCE' in os.environ:
@@ -549,7 +549,7 @@ def collect_image_meta( conf_dict):
     # Rucio metadata
     meta['scope'] = meta['Scope']
     meta['datasetscope'] = meta['Scope']
-    meta['datasetname'] = meta['JobID']
+    meta['datasetname'] = meta['BatchID']
     meta['containerscope'] = meta['Scope']
     meta['containername'] = meta['SampleId']
 

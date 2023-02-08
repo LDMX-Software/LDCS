@@ -88,7 +88,7 @@ echo -e "\nSingularity exited normally, proceeding with post-processing...\n"
 
 # Post processing to extract metadata for rucio
 #eval $( python3 ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config  collect-metadata )
-eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config  collect-metadata-image )
+eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config  -d DEBUG collect-metadata-image )
 if [ ! -z "$KEEP_LOCAL_COPY" ]; then
   if [ -z "$FINALOUTPUTFILE" ]; then
     echo "Post-processing script failed!"

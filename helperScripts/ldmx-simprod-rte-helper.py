@@ -68,11 +68,11 @@ def parse_ldmx_imagebuild_config(config='ldmxjob.config'):
             #for pair in line.split(',') : #if "," in line else line :
             #    logger.info('trying to parse pair %s', pair)
             kv = line.split('=', 2) 
-                if len(kv) != 2:
-                    logger.error('Malformed line %s in config %s', line, config)
-                    #logger.error('Malformed pair %s from line %s, in config %s', pair, line, config)
-                    continue
-                conf_dict[kv[0]] = kv[1].strip()
+            if len(kv) != 2:
+                logger.error('Malformed line %s in config %s', line, config)
+                #logger.error('Malformed pair %s from line %s, in config %s', pair, line, config)
+                continue
+            conf_dict[kv[0]] = kv[1].strip()
     #some stuff is mandatory 
     if not 'FileName' in conf_dict:
         logger.error('Output image name ("FileName") is not defined in the %s. Job aborted.', config)

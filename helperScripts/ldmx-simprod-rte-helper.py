@@ -426,7 +426,7 @@ def set_remote_output(conf_dict, meta):
             filepath=""
             if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
                 filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
-            elif 'IsImage' in meta and (meta['IsImage']=='True' or meta['IsImage']=='Yes') :
+            elif 'IsImage' in meta and (meta['IsImage']=='True' or conf_dict['IsImage']=='Yes') :
                 filepath = '/{UserID}/{Scope}/{JobID}'.format(**meta)
             else :
                 filepath += '/{Scope}/v{DetectorVersion}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
@@ -528,6 +528,7 @@ def collect_image_meta( conf_dict):
             os.system('mv '+os.environ['OUTPUTDATAFILE']+'.sif '+ meta['name'])
 
     conf_dict['FileName'] = meta['name']
+    logger.info('Shipping meta with IsImage={IsImage} to set_remote_output() '.format(**meta)) 
     set_remote_output(conf_dict, meta)
     if os.environ.get('KEEP_LOCAL_COPY'):
         data_location = os.environ['LDMX_STORAGE_BASE']

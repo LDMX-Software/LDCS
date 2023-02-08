@@ -832,7 +832,7 @@ def get_parser():
     parser.add_argument('-j', '--json-metadata', action='store', default='rucio.metadata',
                         help='LDMX Production simulation JSON metadata file')
     parser.add_argument('-I', '--makeImage', action='store_true', default=False,
-                        help='boolean flag to indicate a singularity image build job')
+                        help='Boolean flag to indicate a singularity image build job')
 
     parser.add_argument('action', choices=['init', 'copy-local', 'collect-metadata', 'collect-metadata-madgraph', 'collect-metadata-image', 'test'],
                         help='Helper action to perform')
@@ -887,7 +887,7 @@ if __name__ == '__main__':
         meta = collect_madgraph_meta(conf_dict)
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
-    elif cmd_args.action == 'collect-metadata-image':
+    elif cmd_args.action == 'collect-metadata-image' :
         logger.debug("Running image metadata collection")
         meta = collect_image_meta(conf_dict)
         with open(cmd_args.json_metadata, 'w') as meta_f:

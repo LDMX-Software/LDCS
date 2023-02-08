@@ -92,7 +92,7 @@ def parse_ldmx_imagebuild_config(config='ldmxjob.config'):
 def print_eval(conf_dict, makeSingImage=False):
     if makeSingImage :
         printString= ('export DOCKER_REPO="{DockerRepo}"\n'
-                      'export DOCKER_REPO="{DockerTag}"\n'
+                      'export DOCKER_TAG="{DockerTag}"\n'
                       'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
     else :
         printString= ('export DETECTOR="ldmx-det-full-v{DetectorVersion}-fieldmap-magnet"\n'

@@ -518,7 +518,8 @@ def collect_image_meta( conf_dict):
 
     # Check output file actually exists
     if not os.path.exists( os.environ['OUTPUTDATAFILE'] ) : 
-        logger.error('No output image exists!')
+        os.system('ls')
+        logger.error('No output image named '+os.environ['OUTPUTDATAFILE']+' exists!')
         sys.exit(1)
 
     conf_dict['FileName'] = meta['name']

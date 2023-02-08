@@ -47,10 +47,12 @@ echo -e "Output data file is $OUTPUTDATAFILE\n"
 if [ -z "${DOCKER_REPO}" ]; then
     echo "ERROR: Job config must define input docker container repository"
 	exit 1
+fi
 echo -e "Using DockerHub repository ${DOCKER_REPO}"
 if [ -z "${DOCKER_TAG}" ]; then
     echo "ERROR: Job config must define input docker container tag"
 	exit 1
+fi
 echo -e	"Using DockerHub container tag ${DOCKER_TAG}"
 
 # Copy over local replica to the worker node (singularity can't see unmounted dirs like storage)
@@ -108,4 +110,3 @@ fi
 # Success
 echo "Success, exiting..."
 exit 0
-

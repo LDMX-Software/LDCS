@@ -481,7 +481,7 @@ def collect_image_meta( conf_dict):
     meta['IsSimulation'] = False
     meta['IsRecon'] = False
     # rucio specifics
-    for fromconf in ['Scope', 'SampleId', 'JobID', 'FileName' ]:
+    for fromconf in ['Scope', 'SampleId', 'UserID', 'JobID', 'FileName' ]:
         meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict else None
     # env
     if 'ACCOUNTING_WN_INSTANCE' in os.environ:

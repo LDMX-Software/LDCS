@@ -429,7 +429,6 @@ def set_remote_output(conf_dict, meta):
         and cehost not in conf_dict.get('NoUploadSites', '').split(','):
             filepath=""
             if 'IsEventLibrary' in meta and meta['IsEventLibrary']=='True' :
-                #filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
                 filepath = '/{Scope}/{BeamEnergy}GeV/{BatchID}'.format(**meta)
             elif 'IsImage' in meta and meta['IsImage']=='True' :
                 filepath = '/{UserID}/{Scope}/{JobID}'.format(**meta)
@@ -481,6 +480,7 @@ def collect_image_meta( conf_dict):
     meta = {}
     meta['IsImage'] = True
     meta['IsSimulation'] = False
+    meta['IsRecon'] = False
     # rucio specifics
     for fromconf in ['Scope', 'SampleId', 'JobID', 'FileName' ]:
         meta[fromconf] = conf_dict[fromconf] if fromconf in conf_dict else None
@@ -491,6 +491,7 @@ def collect_image_meta( conf_dict):
         meta['LdmxImage'] = os.environ['SINGULARITY_IMAGE'].split('/')[-1]
     else :
         meta['LdmxImage'] = None
+        logger.debug("Not finding a site (RTE) singularity image used for this job, setting LdmxImage: None")
     meta['ARCCEJobID'] = os.environ['GRID_GLOBAL_JOBID'].split('/')[-1] if 'GRID_GLOBAL_JOBID' in os.environ else None
     meta['FileCreationTime'] = int(time.time())
     meta['Walltime'] = meta['FileCreationTime'] - job_starttime()
@@ -817,7 +818,7 @@ def combine_meta_fromFile( oldMetaFile, newMeta):
 
 def get_parser():
     parser = argparse.ArgumentParser(description='LDMX Production Simulation Helper')
-    parser.add_argument('-d', '--debug', action='store', default='INFO',
+    parser.add_argument('-d', '--debugLevel', action='store', default='INFO',
                         choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'],
                         help='verbosity level (default is %(default)s)')
     parser.add_argument('-c', '--config', action='store', default='ldmxjob.config',
@@ -841,14 +842,16 @@ def get_parser():
 if __name__ == '__main__':
     # parse arguments
     cmd_args = get_parser().parse_args()
-    loglevel = getattr(logging, cmd_args.debug, 30)
+    loglevel = getattr(logging, cmd_args.debugLevel, 30)
     logger.setLevel(loglevel)
 
-    makeImage=False 
-    if cmd_args.makeImage : #running an image building job, rather than production
-        makeImage=True 
+#    makeImage=cmd_args.makeImage #False 
+    #if cmd_args.makeImage : 
+    #    makeImage=True 
     # config is parsed the same way for any action... except image building which is very different 
-    if makeImage :
+    # if running an image building job, rather than production
+    if cmd_args.makeImage : # makeImage :
+        logger.debug("Running config parsing for image building")
         conf_dict = parse_ldmx_imagebuild_config(cmd_args.config)
     else :
         conf_dict = parse_ldmx_config(cmd_args.config)
@@ -860,7 +863,7 @@ if __name__ == '__main__':
             print("Running combine_meta with "+cmd_args.inputMeta )
             with open(cmd_args.inputMeta, 'r') as meta_f :
                 inMeta=(json.load(meta_f)).get("inputMeta")
-#                meta=combine_meta( inMeta, meta ) # doesn't work! has to be passed as a dict
+                #inMeta has to be passed as a dict
                 meta=combine_meta( json.dumps(inMeta), meta )
 
         #print result to screen 
@@ -871,7 +874,7 @@ if __name__ == '__main__':
         # store job start time
         job_starttime()
         # print values for bash eval
-        print_eval(conf_dict, makeImage)
+        print_eval(conf_dict, cmd_args.makeImage)
     elif cmd_args.action == 'copy-local':
         if 'InputDataLocationLocalRSE' in conf_dict :
             if not conf_dict['InputDataLocationLocalRSE'].split(",")[0] == 'None'  :
@@ -885,6 +888,7 @@ if __name__ == '__main__':
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
     elif cmd_args.action == 'collect-metadata-image':
+        logger.debug("Running image metadata collection")
         meta = collect_image_meta(conf_dict)
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)

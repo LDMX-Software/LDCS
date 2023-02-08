@@ -517,12 +517,12 @@ def collect_image_meta( conf_dict):
     meta['name'] =   meta['FileName'] #if os.environ['USER']!='admin' else image 
 
     # Check output file actually exists
-    if not os.path.exists( os.environ['OUTPUTFILENAME'] ) : 
+    if not os.path.exists( os.environ['OUTPUTDATAFILE'] ) : 
         logger.error('No output image exists!')
         sys.exit(1)
 
     conf_dict['FileName'] = meta['name']
-    os.system('mv '+os.environ['OUTPUTFILENAME']+' '+ meta['name'])
+    os.system('mv '+os.environ['OUTPUTDATAFILE']+' '+ meta['name'])
     set_remote_output(conf_dict, meta)
     if os.environ.get('KEEP_LOCAL_COPY'):
         data_location = os.environ['LDMX_STORAGE_BASE']

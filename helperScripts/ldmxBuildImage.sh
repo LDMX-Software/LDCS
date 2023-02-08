@@ -39,11 +39,11 @@ fi
 # Initialise some parameters
 # potentially have a separate init function for image building 
 eval $( python3 ldmx-simprod-rte-helper.py --makeImage -c ldmxproduction.config init )
-if [ -z "$OUTPUTDATAFILE" ]; then
+if [ -z "${OUTPUTDATAFILE}" ]; then
 	echo "ERROR: Job config must define output image name"
 	exit 1
 fi
-echo -e "Output data file is $OUTPUTDATAFILE\n"
+echo -e "Output data file is $OUTPUTDATAFILE"
 if [ -z "${DOCKER_REPO}" ]; then
     echo "ERROR: Job config must define input docker container repository"
 	exit 1
@@ -53,7 +53,7 @@ if [ -z "${DOCKER_TAG}" ]; then
     echo "ERROR: Job config must define input docker container tag"
 	exit 1
 fi
-echo -e	"Using DockerHub container tag ${DOCKER_TAG}"
+echo -e	"Using DockerHub container tag ${DOCKER_TAG}\n"
 
 # Copy over local replica to the worker node (singularity can't see unmounted dirs like storage)
 # not needed for the image generation step but for using it later 
@@ -71,8 +71,8 @@ export SINGULARITY_CACHEDIR=${PWD}/.singularity
 mkdir -p ${SINGULARITY_CACHEDIR} #make sure cache directory exists
 
 #build the image from the repo 
-image="${$OUTPUTDATAFILE}.sif"
-image=$(sed -e 's/.sif.sif/.sif/g' <<< $image)
+image="${OUTPUTDATAFILE}.sif"
+image=$(sed -e 's/.sif.sif/.sif/g' <<< ${image})
 location="docker://${DOCKER_REPO}:${DOCKER_TAG}"
 echo "pulling from DockerHub $location to build singularity image $image"
 

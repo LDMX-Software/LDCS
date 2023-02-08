@@ -521,7 +521,7 @@ def collect_image_meta( conf_dict):
         sys.exit(1)
 
     conf_dict['FileName'] = meta['name']
-    os.system('mv '+os.environ['OUTPUTFILENAME']+' '+ meta['name']
+    os.system('mv '+os.environ['OUTPUTFILENAME']+' '+ meta['name'])
     set_remote_output(conf_dict, meta)
     if os.environ.get('KEEP_LOCAL_COPY'):
         data_location = os.environ['LDMX_STORAGE_BASE']

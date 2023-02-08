@@ -67,7 +67,7 @@ def parse_ldmx_imagebuild_config(config='ldmxjob.config'):
             #    line=line+', '
             #for pair in line.split(',') : #if "," in line else line :
             #    logger.info('trying to parse pair %s', pair)
-            kv = line.split('=', 2) :
+            kv = line.split('=', 2) 
                 if len(kv) != 2:
                     logger.error('Malformed line %s in config %s', line, config)
                     #logger.error('Malformed pair %s from line %s, in config %s', pair, line, config)

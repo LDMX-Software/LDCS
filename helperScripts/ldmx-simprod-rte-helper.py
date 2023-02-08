@@ -581,10 +581,9 @@ def collect_madgraph_meta( conf_dict):
     # just add the tid for our purposes 
     uniqueOutName = 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
     # Check output file actually exists
-    # TODO: this case should not return the metadata, but an error code   
     if not os.path.exists( mgOutName ) : #'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}.tar.gz'.format(**meta) ):
         logger.error('Output tarball does not exist!')
-        return meta
+        sys.exit(1)
 
     meta['name'] = uniqueOutName #'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
     conf_dict['FileName'] = meta['name']
@@ -601,7 +600,7 @@ def collect_madgraph_meta( conf_dict):
 
     if not meta.get('DataLocation'):
         logger.error('No local or remote output location for output file, file will not be registered in Rucio')
-        return meta
+        sys.exit(1)
 
     # Rucio metadata
     meta['scope'] = meta['Scope']
@@ -614,53 +613,11 @@ def collect_madgraph_meta( conf_dict):
     (meta['md5'], meta['adler32']) = calculate_md5_adler32_checksum(conf_dict['FileName'])
 
     return meta
-    meta['ARCCEJobID'] = os.environ['GRID_GLOBAL_JOBID'].split('/')[-1] if 'GRID_GLOBAL_JOBID' in os.environ else None
-    meta['FileCreationTime'] = int(time.time())
-    meta['Walltime'] = meta['FileCreationTime'] - job_starttime()
-
-    # the job run in the image sets up the output name like this:
-    mgOutName = 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}.tar.gz'.format(**meta)
-    # just add the tid for our purposes 
-    uniqueOutName = 'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
-    # Check output file actually exists
-    # TODO: this case should not return the metadata, but an error code   
-    if not os.path.exists( mgOutName ) : #'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}.tar.gz'.format(**meta) ):
-        logger.error('Output tarball does not exist!')
-        return meta
-
-    meta['name'] = uniqueOutName #'LDMX_W_UndecayedAP_mA_{APrimeMass}_run_{runNumber}_t{FileCreationTime}.tar.gz'.format(**meta)
-    conf_dict['FileName'] = meta['name']
-    os.system('mv '+mgOutName+' '+uniqueOutName)
-    set_remote_output(conf_dict, meta)
-    if os.environ.get('KEEP_LOCAL_COPY'):
-        data_location = os.environ['LDMX_STORAGE_BASE']
-        data_location += '/ldmx/lheFiles/{Scope}/{BeamEnergy}GeV/{BatchID}/{name}'.format(**meta)
-        meta['local_replica'] = data_location
-        if 'DataLocation' in meta:
-            meta['DataLocation'] = ','.join([meta['DataLocation'], data_location])
-        else:
-            meta['DataLocation'] = data_location
-
-    if not meta.get('DataLocation'):
-        logger.error('No local or remote output location for output file, file will not be registered in Rucio')
-        return meta
-
-    # Rucio metadata
-    meta['scope'] = meta['Scope']
-    meta['datasetscope'] = meta['Scope']
-    meta['datasetname'] = meta['BatchID']
-    meta['containerscope'] = meta['Scope']
-    meta['containername'] = meta['SampleId']
-
-    meta['bytes'] = os.stat(conf_dict['FileName']).st_size
-    (meta['md5'], meta['adler32']) = calculate_md5_adler32_checksum(conf_dict['FileName'])
-
-    return meta
-
 
 
 def collect_meta(conf_dict, json_file):
 
+    logger.info("Running simulation job metadata collection")
     meta = collect_from_json(json_file, conf_dict)
     meta['IsSimulation'] = True
 
@@ -851,7 +808,7 @@ if __name__ == '__main__':
     # config is parsed the same way for any action... except image building which is very different 
     # if running an image building job, rather than production
     if cmd_args.makeImage : # makeImage :
-        logger.info("Running config parsing for image building")
+        logger.debug("Running config parsing for image building")
         conf_dict = parse_ldmx_imagebuild_config(cmd_args.config)
     else :
         conf_dict = parse_ldmx_config(cmd_args.config)
@@ -887,6 +844,7 @@ if __name__ == '__main__':
         meta = collect_madgraph_meta(conf_dict)
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
+
     elif cmd_args.action == 'collect-image-metadata' :
         logger.info("Running image metadata collection")
         meta = collect_image_meta(conf_dict)

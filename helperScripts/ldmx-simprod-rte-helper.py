@@ -826,7 +826,7 @@ def get_parser():
                         help='Retrieved Rucio metadata JSON file (associated with job input file)')
     parser.add_argument('-j', '--json-metadata', action='store', default='rucio.metadata',
                         help='LDMX Production simulation JSON metadata file')
-    parser.add_argument('-I', '--makeImage', action='store', default=False,
+    parser.add_argument('-I', '--makeImage', action='store_true', default=False,
                         help='boolean flag to indicate a singularity image build job')
 
     parser.add_argument('action', choices=['init', 'copy-local', 'collect-metadata', 'collect-metadata-madgraph', 'collect-metadata-image', 'test'],

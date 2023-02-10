@@ -65,6 +65,7 @@ then
 	ls
 	exit 1
 fi
+chmod +x ${SINGULARITY_IMAGE}
 
 # Start the simulation container
 echo -e "Starting Singularity image $SINGULARITY_IMAGE\n"

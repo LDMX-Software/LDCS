@@ -95,9 +95,9 @@ def print_eval(conf_dict, makeSingImage=False):
                       'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
     else :
         printString= ('export DETECTOR="ldmx-det-full-v{DetectorVersion}-fieldmap-magnet"\n'
-                  'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
+                      'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
         if "FieldMap" in conf_dict : 
-            printString+=('\nexport FIELDMAP="{FieldMap}"\n'.format(**conf_dict))
+            printString+=('\nexport FIELDMAP="{FieldMap}"'.format(**conf_dict))
 
         if 'APrimeMass' in conf_dict :
             printString+=('\nexport APMASS="{APrimeMass}"\n'
@@ -106,7 +106,7 @@ def print_eval(conf_dict, makeSingImage=False):
                           'export ENERGIES="{IncidentEnergies}"'
                           .format(**conf_dict))
     if "ImageLocationLocal" in conf_dict :
-        printString+=('export SINGULARITY_IMAGE="{ImageLocationLocal}"\n'.format(**conf_dict))
+        printString+=('\nexport SINGULARITY_IMAGE="{ImageLocationLocal}"\n'.format(**conf_dict))
 
     print( printString )
 

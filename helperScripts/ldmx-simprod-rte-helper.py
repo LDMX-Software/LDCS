@@ -37,7 +37,7 @@ def parse_ldmx_config(config='ldmxjob.config'):
 #        logger.error('RandomSeed1 and/or RandomSeed2 is not set in %s. Job aborted.', config)
 #        sys.exit(1)
     # ^^ no longer mandatory options
-    for opt in ['DetectorVersion', 'FieldMap']:
+    for opt in ['DetectorVersion'] : #, 'FieldMap']: #don't think fieldmap is actually necessary anymore 
         if opt not in conf_dict :
             if 'APrimeMass' in conf_dict: # don't need detector details for pure event library generation jobs 
                 conf_dict[opt] = None     # just set to empty to avoid missing field later

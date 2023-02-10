@@ -59,6 +59,12 @@ python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local
 find . -name LDMX_*.tar.gz -exec tar -xvzf {} \;
 #tar -xvzf LDMX_*.tar.gz
 
+if [ ! -f $SINGULARITY_IMAGE ]
+then
+	echo -e "Couldn't find singularity image $SINGULARITY_IMAGE as file after all!"
+	ls
+	exit 1
+fi
 
 # Start the simulation container
 echo -e "Starting Singularity image $SINGULARITY_IMAGE\n"

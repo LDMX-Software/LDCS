@@ -95,7 +95,7 @@ def print_eval(conf_dict, makeSingImage=False):
                       'export OUTPUTDATAFILE="{FileName}"'.format(**conf_dict))
     elif "ImageLocation" in conf_dict :
         printString= ('export SINGULARITY_IMAGE="{ImageLocation}"\n'
-                      'echo "Using singularity image $SINGULARITY_IMAGE"\n')
+                      'echo "Using singularity image $SINGULARITY_IMAGE"\n'.format(**conf_dict))
 
     else :
         printString= ('export DETECTOR="ldmx-det-full-v{DetectorVersion}-fieldmap-magnet"\n'

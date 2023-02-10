@@ -42,6 +42,8 @@ fi
 eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config init )
 echo -e "Output data file is $OUTPUTDATAFILE\n"
 echo "After init, using singularity image env var $SINGULARITY_IMAGE"
+echo "Check: is it in local dir?"
+ls 
 
 #check after init, which is allowed to let the SINGULARITY_IMAGE point to a custom image 
 if [ -z "$SINGULARITY_IMAGE" ]; then

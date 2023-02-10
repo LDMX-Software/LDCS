@@ -31,11 +31,6 @@ if [ -z "$LDMX_STORAGE_BASE" ]; then
   exit 1
 fi
 
-if [ -z "$SINGULARITY_IMAGE" ]; then
-  echo "ERROR: ARC CE admin should define SINGULARITY_IMAGE with arcctl rte params-set"
-  exit 1
-fi
-
 # Check singularity is installed
 type singularity
 if [ $? -ne 0 ]; then
@@ -46,6 +41,13 @@ fi
 # Initialise some parameters
 eval $( python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config init )
 echo -e "Output data file is $OUTPUTDATAFILE\n"
+
+#check after init, which is allowed to let the SINGULARITY_IMAGE point to a custom image 
+if [ -z "$SINGULARITY_IMAGE" ]; then
+  echo "ERROR: pass an input singularity image, or, ARC CE admin should define SINGULARITY_IMAGE with arcctl rte params-set"
+  exit 1
+fi
+
 
 # Copy over local replica to the worker node (singularity can't see unmounted dirs like storage)
 python3 ldmx-simprod-rte-helper.py -c ldmxproduction.config copy-local

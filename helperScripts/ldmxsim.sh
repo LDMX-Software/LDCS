@@ -66,7 +66,7 @@ then
 	exit 1
 fi
 chmod +x ${SINGULARITY_IMAGE}
-chmod 744 ${SINGULARITY_IMAGE}
+chmod 755 ${SINGULARITY_IMAGE}
 ls -lhrt
 
 

@@ -67,6 +67,7 @@ then
 fi
 chmod +x ${SINGULARITY_IMAGE}
 chmod 755 ${SINGULARITY_IMAGE}
+chmod 755 ldmxjob.py
 ls -lhrt
 
 

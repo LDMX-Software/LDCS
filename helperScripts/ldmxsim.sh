@@ -65,21 +65,24 @@ then
 	ls
 	exit 1
 fi
-#chmod +x ${SINGULARITY_IMAGE}
-#chmod 755 ${SINGULARITY_IMAGE}
-#chmod 755 ldmxjob.py
-#ls -lhrt
 
 
 # Start the simulation container
 echo -e "Starting Singularity image $SINGULARITY_IMAGE\n"
-singularity run $SINGULARITY_OPTIONS --home "$PWD" "${SINGULARITY_IMAGE}" . fire ldmxjob.py
+singularity run $SINGULARITY_OPTIONS --home "$PWD" "${SINGULARITY_IMAGE}" . ldmxjob.py
 RET=$?
 
 if [ $RET -ne 0 ]; then
-  echo "Singularity exited with code $RET"
-  exit $RET
+	echo "Singularity exited with code $RET. Trying the run command that includes 'fire' " 
+	singularity run $SINGULARITY_OPTIONS --home "$PWD" "${SINGULARITY_IMAGE}" . fire ldmxjob.py
+	RET=$?
 fi
+
+if [ $RET -ne 0 ]; then
+    echo "Singularity exited with code $RET. Exiting."
+	exit $RET
+fi
+
 
 echo -e "\nSingularity exited normally, proceeding with post-processing...\n"
 

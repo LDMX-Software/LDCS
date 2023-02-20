@@ -73,7 +73,7 @@ fi
 
 # Start the simulation container
 echo -e "Starting Singularity image $SINGULARITY_IMAGE\n"
-singularity run $SINGULARITY_OPTIONS --home "$PWD" "${SINGULARITY_IMAGE}" fire ldmxjob.py
+singularity run $SINGULARITY_OPTIONS --home "$PWD" "${SINGULARITY_IMAGE}" . fire ldmxjob.py
 RET=$?
 
 if [ $RET -ne 0 ]; then

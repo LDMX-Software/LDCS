@@ -47,9 +47,6 @@ def parse_ldmx_config(config='ldmxjob.config'):
     # ensure FileName is set to something
     if 'FileName' not in conf_dict:
         conf_dict['FileName'] = 'output.sif'
-            # ensure FileName is set to something
-    if 'LdmxImage' not in conf_dict:
-        conf_dict['FileName'] = 'output.sif'
     #batch id will be used for storage directory structure. Should ALWAYS be set.
     if 'BatchID' not in conf_dict:
         logger.error('BatchID is not defined in the %s. Needed for storage directory structure. Job aborted.', config)

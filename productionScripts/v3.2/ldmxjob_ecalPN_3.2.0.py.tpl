@@ -10,7 +10,7 @@ from LDMX.Framework import ldmxcfg
 thisPassName="sim"
 p=ldmxcfg.Process(thisPassName)
 
-p.maxTriesPerEvent = 10000
+p.maxTriesPerEvent = 1 #10000   <--- set to 1 to make sure we can get EOT from rucio, not event weights
 #import all processors
 
 from LDMX.Biasing import ecal
@@ -30,17 +30,13 @@ sim.description = '4 GeV ECal PN simulation'
 # Below should be the same for all sim scenarios
 
 #
-#Set run parameters. These are all pulled from the job config                                                                                        
+#Set run parameters. These are all pulled from the job config so not defined here                                                                                        
 #
-                                                                                                                                                     
 p.run = RUNNUMBER
 nElectrons = nEle
 beamEnergy=beamE;  #in GeV     
 
-p.maxEvents = 1000
-
-p.histogramFile = f'hist.root'
-p.outputFiles = [f'events.root']
+p.maxEvents = 1000000
 
 import LDMX.Ecal.EcalGeometry
 import LDMX.Ecal.ecal_hardcoded_conditions
@@ -57,7 +53,7 @@ from LDMX.TrigScint.trigScint import TrigScintClusterProducer
 from LDMX.TrigScint.trigScint import trigScintTrack
 
 from LDMX.Recon.electronCounter import ElectronCounter
-from LDMX.Recon.simpleTrigger import TriggerProcessor
+from LDMX.Recon.simpleTrigger import simpleTrigger
 
 
 #and reco...
@@ -66,9 +62,12 @@ from LDMX.Recon.simpleTrigger import TriggerProcessor
 tsDigisDown  =TrigScintDigiProducer.pad1()
 tsDigisTag   =TrigScintDigiProducer.pad2()
 tsDigisUp    =TrigScintDigiProducer.pad3()
-tsDigisDown.randomSeed = 1
-tsDigisTag.randomSeed = 1
-tsDigisUp.randomSeed = 1
+
+tsDigis = [tsDigisDown, tsDigisTag, tsDigisUp]
+for digi in tsDigis : 
+     digi.randomSeed = p.run
+     if "v14" in detector :  #this if not used in original 3.2.0 production
+          digi.number_of_strips = 48 
 
 if "v12" in detector :
      tsDigisTag.input_collection="TriggerPadTagSimHits"
@@ -83,6 +82,11 @@ tsClustersDown.input_collection = tsDigisDown.output_collection
 tsClustersTag.input_collection = tsDigisTag.output_collection
 tsClustersUp.input_collection = tsDigisUp.output_collection
 
+if "v12" in detector :
+     tsClustersTag.pad_time = -2.
+     tsClustersUp.pad_time = 0.
+     tsClustersDown.pad_time = 0.
+
 #make sure to pick up the right pass 
 tsClustersTag.input_pass_name = thisPassName 
 tsClustersUp.input_pass_name = tsClustersTag.input_pass_name
@@ -92,19 +96,25 @@ trigScintTrack.input_pass_name = thisPassName
 trigScintTrack.seeding_collection = tsClustersTag.output_collection
 
 
-#calorimeters
-ecalDigi   =eDigi.EcalDigiProducer('ecalDigi')
+#calorimeters. set up v12 and 13 a little differently than v14, from tom:
 ecalReco   =eDigi.EcalRecProducer('ecalRecon')
+if "v12" in detector or "v13" in detector :
+    ecalDigi = eDigi.EcalDigiProducer(si_thickness = 0.5)
+    ecalReco.v12()
+else :
+    ecalDigi = eDigi.EcalDigiProducer()
+    ecalReco.v14()
+
 ecalVeto   =vetos.EcalVetoProcessor('ecalVetoBDT')
 hcalDigi   =hDigi.HcalDigiProducer('hcalDigi')
 hcalReco   =hDigi.HcalRecProducer('hcalRecon')
 hcalVeto   =hcal.HcalVetoProcessor('hcalVeto')
 
-
-# electron counter so simpletrigger doesn't crash                                                                                                                      
-eCount = ElectronCounter( 1, "ElectronCounter") # first argument is number of electrons in simulation
-eCount.use_simulated_electron_number = True 
+# electron counter for trigger processor 
+eCount = ElectronCounter( nElectrons, "ElectronCounter") # first argument is number of electrons in simulation
+eCount.use_simulated_electron_number = False #True 
 eCount.input_pass_name=thisPassName
+eCount.input_collection="TriggerPadTracksY"
 
 #trigger setup, no skim
 simpleTrigger.start_layer= 0   #make sure it doesn't start from 1 (old default bug)
@@ -112,7 +122,8 @@ simpleTrigger.input_pass=thisPassName
 #p.skimDefaultIsDrop()
 #p.skimConsider("simpleTrigger")
 
-p.sequence=[ sim, ecalDigi, ecalReco, ecalVeto, tsDigisTag, tsDigisUp, tsDigisDown, tsClustersTag, tsClustersUp, tsClustersDown, trigScintTrack, eCount, simpleTrigger, hcalDigi, hcalReco, hcalVeto ]
+#p.sequence=[ sim, ecalDigi, ecalReco, ecalVeto, tsDigisTag, tsDigisUp, tsDigisDown, tsClustersTag, tsClustersUp, tsClustersDown, trigScintTrack, eCount, simpleTrigger, hcalDigi, hcalReco, hcalVeto ]
+p.sequence=[ sim, ecalDigi, ecalReco, ecalVeto ] + tsDigis + [ tsClustersTag, tsClustersUp, tsClustersDown, trigScintTrack, eCount, simpleTrigger, hcalDigi, hcalReco, hcalVeto ]
 
 p.keep = [ "drop MagnetScoringPlaneHits", "drop TrackerScoringPlaneHits", "drop HcalScoringPlaneHits"]
 p.outputFiles=["simoutput.root"]

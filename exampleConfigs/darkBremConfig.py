@@ -1,3 +1,11 @@
+"""
+NOTICE
+
+  This config is highly technical and was from a time when the dark brem simulation was in
+  active development. It has multiple configuration parameters that cause the simulation to
+  change methods/styles as well as the parameters of those methods and styles.
+
+"""
 #!/usr/bin/python
 
 import sys

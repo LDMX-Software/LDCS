@@ -888,7 +888,7 @@ if __name__ == '__main__':
             inMeta=json.load(meta_f)
             logger.debug(json.dumps(inMeta, indent = 2 ))
             #inMeta has to be passed as a dict
-            meta=collect_image_meta( conf_dict, inMeta) #json.dumps(apptainerMeta) )
+            meta=collect_image_meta(conf_dict, inMeta) #json.dumps(apptainerMeta) )
         #meta = collect_image_meta(conf_dict, cmd_args.apptainerMeta)
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)

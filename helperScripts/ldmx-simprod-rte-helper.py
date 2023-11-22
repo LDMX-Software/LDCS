@@ -152,7 +152,7 @@ def collect_from_json( infile, in_conf ):
 #        sys.exit(1)
 
     logger.info('Opened {}'.format(infile))
-    logger.info(json.dumps(mjson, indent = 2, sort_keys=True ))
+    logger.debug(json.dumps(mjson, indent = 2, sort_keys=True ))
 
     if 'generators' in mjson['sequence'][0] :
         config_dict['GunPositionX[mm]']  = mjson['sequence'][0]['generators'][0]['position'][0] if 'position' in mjson['sequence'][0]['generators'][0] else None
@@ -406,7 +406,7 @@ def collect_from_json( infile, in_conf ):
         config_dict['NumberOfEvents'] = mjson['maxEvents']
         #otherwise we are most definitely using an input file and the number from there should be kept 
 
-    logger.info(json.dumps(config_dict, indent = 2, sort_keys=True ))
+    logger.debug(json.dumps(config_dict, indent = 2, sort_keys=True ))
     return config_dict
 
 
@@ -475,7 +475,7 @@ def get_pileup_file(conf_dict):
     return
 
 
-def collect_image_meta( conf_dict):
+def collect_image_meta( conf_dict, imageMeta):
 
     meta = {}
     meta['IsImage'] = True
@@ -496,24 +496,45 @@ def collect_image_meta( conf_dict):
     meta['FileCreationTime'] = int(time.time())
     meta['Walltime'] = meta['FileCreationTime'] - job_starttime()
 
-    #for rucio, and for file naming?
-    #start by setting up defaults 
-    meta['G4version']='10.2.3_v0.4'
-    meta['ROOTversion']='6.22.00' 
-    meta['ONNXversion']='1.3.0'
-    meta['XERCESversion']='3.2.3'
-    meta['OSname']='UBUNTU'
-    meta['OSversion']='18.04'
-    for fromconf in ['G4version', 'ROOTversion', 'ONNXversion', 'XERCESversion', 'OSversion', 'OSname' ]:
-        if fromconf in conf_dict :
-            meta[fromconf] = conf_dict[fromconf] 
+    #image dependency metadata
 
-    # we want the imagge to end up in:
+    #first check if there is a json to pull from
+    if imageMeta :
+        if 'Config' in imageMeta[0] :
+            if 'Labels' in imageMeta[0]['Config'] :
+                for key in imageMeta[0]['Config']['Labels'] :
+                    #print(key)
+                    val=imageMeta[0]['Config']['Labels'][key]
+                    if 'opencontainers' in key : #make sure they split in the same number of strings as others
+                        key=key.replace('org.opencontainers.image.ref', 'OS')
+                        key=key.replace('org.opencontainers.image', 'OS')
+                    key=key.replace('geant4', 'G4') #stick to previous naming convention
+                    keepKey=key.split('.')[0].upper()+key.split('.')[1] #... and to naming: DEPENDENCYversion
+                    meta[keepKey]=val 
+                    print(keepKey, val)
+            else :
+                logger.info("Not finding 'Labels' in image metadata")
+        else :
+            logger.error("Not finding 'Config' in image metadata")
+
+    else :
+        print("no image metadata")
+        #if not, set up the old way
+        #start by setting up defaults 
+        meta['G4version']='10.2.3_v0.4'
+        meta['ROOTversion']='6.22.00' 
+        meta['ONNXversion']='1.3.0'
+        meta['XERCESversion']='3.2.3'
+        meta['OSname']='UBUNTU'
+        meta['OSversion']='18.04'
+        for fromconf in ['G4version', 'ROOTversion', 'ONNXversion', 'XERCESversion', 'OSversion', 'OSname' ]:
+            if fromconf in conf_dict :
+                meta[fromconf] = conf_dict[fromconf] 
+
+    # we want the image to end up in... :
     # user case -- user.$USER.image:myImageName.sif
     # production case -- prod.image:ldmx-pro....
     #
-    #  ... actually, this is a good time to leave this naming convention, and just use a short version tag also for prod images, so they are easy to look up/specify for later 
-    #image='ldmx-{DockerRepo}_{DockerTag}-gLDMX.{G4version}-r{ROOTversion}-onnx{ONNXversion}-xerces{XERCESversion}-{OSname}{OSversion}.sif'.format(**meta)
     #meta['UserID'] = "user."+os.environ['USER'] if os.environ['USER']!='admin' else "prod"
     meta['Scope'] = meta['UserID']+".image"
     if ".sif" not in meta['FileName'] : #make sure the extension is there
@@ -772,7 +793,7 @@ def combine_meta_fromFile( oldMetaFile, newMeta):
         metaOut[key] = newMeta[key]
         print (key+"   "+str(metaOut[key]))
     print ("Combined meta")
-    json.dumps( metaOut, indent = 2, sort_keys=True  )
+    logger.debug(json.dumps( metaOut, indent = 2, sort_keys=True  ) )
     print ("\n\n")
 
     return metaOut 
@@ -790,6 +811,8 @@ def get_parser():
                         help='LDMX Production simulation macro-definition file template')
     parser.add_argument('-m', '--metaDump', action='store', default='parameterDump.json',
                         help='LDMX Production simulation parameter dump JSON file')
+    parser.add_argument('-a', '--apptainerMeta', action='store',  default='', #'apptainerInspectOutput.json',
+                        help='LDMX Production image metadata dump JSON file')
     parser.add_argument('-i', '--inputMeta', action='store', default='', #'inputMeta.json',
                         help='Retrieved Rucio metadata JSON file (associated with job input file)')
     parser.add_argument('-j', '--json-metadata', action='store', default='rucio.metadata',
@@ -828,7 +851,15 @@ if __name__ == '__main__':
                 inMeta=(json.load(meta_f)).get("inputMeta")
                 #inMeta has to be passed as a dict
                 meta=combine_meta( json.dumps(inMeta), meta )
-
+        if cmd_args.apptainerMeta :
+            print("Getting image metadata from "+cmd_args.apptainerMeta )
+            with open(cmd_args.apptainerMeta, 'r') as meta_f :
+                inMeta=json.load(meta_f)
+                logger.info(json.dumps(inMeta, indent = 2 ))
+                #inMeta has to be passed as a dict
+                meta=collect_image_meta( meta, inMeta) #json.dumps(apptainerMeta) )
+            #meta=collect_image_meta( meta, json.dumps(cmd_args.apptainerMeta) )
+            
         #print result to screen 
         json.dumps( meta, indent = 2, sort_keys=True )
         with open(cmd_args.json_metadata, 'w') as meta_f:
@@ -853,7 +884,7 @@ if __name__ == '__main__':
 
     elif cmd_args.action == 'collect-image-metadata' :
         logger.info("Running image metadata collection")
-        meta = collect_image_meta(conf_dict)
+        meta = collect_image_meta(conf_dict, cmd_args.apptainerMeta)
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
             

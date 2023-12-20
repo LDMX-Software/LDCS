@@ -307,8 +307,9 @@ def collect_from_json( infile, in_conf ):
         elif procName == "HcalVeto" :
             config_dict[procName+'MaxPE'] = seq['pe_threshold']
             config_dict[procName+'MaxTime[ns]'] = seq['max_time']
-            config_dict[procName+'MaxDepth[mm]'] = seq['max_depth']
             config_dict[procName+'BackMinPE'] = seq['back_min_pe']
+            if 'max_depth' in seq : #removed starting from v3.3.3
+                config_dict[procName+'MaxDepth[mm]'] = seq['max_depth']
         elif procName == "HcalRec" :
             config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
             config_dict[procName+'VoltagePerMIP'] = seq['voltage_per_mip']
@@ -500,7 +501,9 @@ def collect_image_meta( conf_dict, imageMeta):
 
     #first check if there is a json to pull from
     if imageMeta :
-        if 'Config' in imageMeta[0] :
+        # there needs to somehow be an intermediate step here, 
+        # fn case there is no structure like imageMeta[0] 
+        if 'Config' in imageMeta[0] :  
             if 'Labels' in imageMeta[0]['Config'] :
                 for key in imageMeta[0]['Config']['Labels'] :
                     #print(key)
@@ -518,7 +521,7 @@ def collect_image_meta( conf_dict, imageMeta):
             logger.error("Not finding 'Config' in image metadata")
 
     else :
-        print("no image metadata")
+        print("no image metadata found, pulling info from config")
         #if not, set up the old way
         #start by setting up defaults 
         meta['G4version']='10.2.3_v0.4'
@@ -884,12 +887,17 @@ if __name__ == '__main__':
 
     elif cmd_args.action == 'collect-image-metadata' :
         logger.info("Running image metadata collection")
-        with open(cmd_args.apptainerMeta, 'r') as meta_f :
-            inMeta=json.load(meta_f)
-            logger.debug(json.dumps(inMeta, indent = 2 ))
-            #inMeta has to be passed as a dict
-            meta=collect_image_meta(conf_dict, inMeta) #json.dumps(apptainerMeta) )
-        #meta = collect_image_meta(conf_dict, cmd_args.apptainerMeta)
+        if cmd_args.apptainerMeta :
+            with open(cmd_args.apptainerMeta, 'r') as meta_f :
+                #inMeta=json.load(meta_f)
+                inMeta=json.loads(meta_f.read())
+                #inMeta=(json.load(meta_f)).get("apptainerMeta")
+                logger.debug(json.dumps(inMeta, indent = 2 ))
+                #inMeta has to be passed as a dict
+                meta=collect_image_meta(conf_dict, inMeta) #json.dumps(apptainerMeta) )
+            #meta = collect_image_meta(conf_dict, cmd_args.apptainerMeta)
+        else :
+            meta=collect_image_meta(conf_dict, '')
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
             

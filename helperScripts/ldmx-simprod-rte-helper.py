@@ -898,6 +898,7 @@ if __name__ == '__main__':
             #meta = collect_image_meta(conf_dict, cmd_args.apptainerMeta)
         else :
             meta=collect_image_meta(conf_dict, '')
+
         with open(cmd_args.json_metadata, 'w') as meta_f:
             json.dump(meta, meta_f)
             

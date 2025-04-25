@@ -17,7 +17,7 @@ from LDMX.Biasing import target
 from LDMX.SimCore import generators as gen
 
 detector='ldmx-det-v14-8gev'
-sim = target.photo_nuclear(detector, gen.single_8gev_e_upstream_tagger()) #thresh in target.photo_nuclear needs to be changed to 4850., currently configured for 4 GeV
+sim = target.photo_nuclear(detector, gen.single_8gev_e_upstream_tagger())
 sim.beamSpotSmear = [20.,80.,0.]
 sim.description = '8 GeV target PN simulation'
 
@@ -103,7 +103,7 @@ eCount.use_simulated_electron_number = True
 eCount.input_pass_name=thisPassName
 
 #trigger setup, no skim
-simpleTrigger = TriggerProcessor('simpleTrigger')
+simpleTrigger = TriggerProcessor('simpleTrigger', 8000.)
 simpleTrigger.start_layer = 0
 simpleTrigger.input_pass = thisPassName
 

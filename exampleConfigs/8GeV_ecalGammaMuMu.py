@@ -105,7 +105,7 @@ eCount = ElectronCounter(1, "ElectronCounter") # first argument is number of ele
 eCount.use_simulated_electron_number = True
 eCount.input_pass_name=thisPassName
 
-simpleTrigger = TriggerProcessor('simpleTrigger')
+simpleTrigger = TriggerProcessor('simpleTrigger', 8000.)
 simpleTrigger.start_layer = 0
 simpleTrigger.input_pass = thisPassName
 

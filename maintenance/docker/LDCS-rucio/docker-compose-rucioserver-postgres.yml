@@ -1,0 +1,33 @@
+services:
+  rucio-server:
+    image: rucio/rucio-server:release-1.21.6
+    hostname: ${LDCS_RUCIO_FQDN}
+    ports:
+      - "443:443"
+    volumes:
+      - /etc/grid-security/:/etc/grid-security/
+#      - /etc/grid-security/hostcert.pem:/etc/grid-security/hostcert.pem
+#      - /etc/grid-security/hostkey.pem:/etc/grid-security/hostkey.pem
+      - /opt/rucio/etc:/opt/rucio/etc
+    environment:
+      - RUCIO_ENABLE_SSL=True
+      - RUCIO_HOSTNAME=${LDCS_RUCIO_FQDN}
+      - RUCIO_CFG_DATABASE_DEFAULT=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@ruciodb/${POSTGRES_DB}
+      - RUCIO_CA_PATH=/etc/grid-security/certificates
+      - RUCIO_ENABLE_LOGFILE=True
+      - RUCIO_DEFINE_ALIASES=True
+  ruciodb:
+    image: postgres:11
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    command: ["-c", "fsync=off","-c", "synchronous_commit=off","-c", "full_page_writes=off"]
+    volumes:
+      - vol-ruciodb-data:/var/lib/postgresql/data
+
+volumes:
+  vol-ruciodb-data:
+

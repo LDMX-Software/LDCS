@@ -1,8 +1,6 @@
-####################################
 #
 #  LDCS System maintenance files
 #
-####################################
 
 The maintenance folder contains files that are used to 
 maintain the LDCS system. 

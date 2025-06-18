@@ -9,7 +9,8 @@ services:
 #      - /etc/grid-security/hostcert.pem:/etc/grid-security/hostcert.pem
 #      - /etc/grid-security/hostkey.pem:/etc/grid-security/hostkey.pem
       - /opt/rucio/etc:/opt/rucio/etc
-#      - /var/log/rucio:/var/log/rucio  # use docker-compose logs instead? or reroute to avoid space clogging/easier cleanup?
+      # comment out the following to use docker compose logs only. This logs to the host system, when we have space
+      - /var/log/rucio:/var/log/rucio
     environment:
       - RUCIO_ENABLE_SSL=True
       - RUCIO_HOSTNAME=${LDCS_RUCIO_FQDN}
@@ -29,29 +30,32 @@ services:
     volumes:
       - vol-ruciodb-data:/var/lib/postgresql/data
    rucio-daemons-abacus:
-     image: rucio/rucio-daemons
+     image: rucio/rucio-daemons:release-1.21.6
      volumes:
        - /opt/rucio/etc/rucio.cfg:/opt/rucio/etc/rucio.cfg
-#       - /var/log/rucio:/var/log/rucio # use docker-compose logs instead
+       # comment out the following to use docker compose logs only. This logs to the host system, when we have space
+       - /var/log/rucio:/var/log/rucio
      environment:
        - RUCIO_DAEMON=abacus-rse
        - RUCIO_ENABLE_LOGS=True
    rucio-daemons-reaper:
-     image: rucio/rucio-daemons
+     image: rucio/rucio-daemons:release-1.21.6
      volumes:
        - /opt/rucio/etc/rucio.cfg:/opt/rucio/etc/rucio.cfg
        - /home/almalinux/act/ldmx.long.proxy.root:/opt/rucio/etc/x509
        - /etc/grid-security/certificates:/etc/grid-security/certificates
-#       - /var/log/rucio:/var/log/rucio # use docker-compose logs instead
+       # comment out the following to use docker compose logs only. This logs to the host system, when we have space
+       - /var/log/rucio:/var/log/rucio
      environment:
        - RUCIO_DAEMON=reaper
        - RUCIO_ENABLE_LOGS=True 
        - X509_USER_PROXY=/opt/rucio/etc/x509
    rucio-daemons-undertaker:
-     image: rucio/rucio-daemons
+     image: rucio/rucio-daemons:release-1.21.6
      volumes:
        - /opt/rucio/etc/rucio.cfg:/opt/rucio/etc/rucio.cfg
-#       - /var/log/rucio:/var/log/rucio # use docker-compose logs instead ?
+       # comment out the following to use docker compose logs only. This logs to the host system, when we have space
+       - /var/log/rucio:/var/log/rucio
      environment:
       - RUCIO_DAEMON=undertaker
       - RUCIO_ENABLE_LOGS=True

@@ -20,10 +20,19 @@
 ```
 
 4) Deploy and edit the relevant configuration files in ../configFiles. Create folders if needed.
+Make sure passwords and paths match between the configFiles and the docker-compose file
 
-5) Start the services with docker-compose
-
-```
-docker compose -f docker-compose-rucioserver-postgres.yml up -d
+5) Start all the services with docker-compose
 
 ```
+docker compose -f docker-compose-rucioserver-postgres-daemons.yml up -d
+
+```
+6) To stop all the services:
+```
+docker compose -f docker-compose-rucioserver-postgres-daemons.yml down
+
+```
+
+Refer to docker compose documentation for further information on how to interact with each single service.
+

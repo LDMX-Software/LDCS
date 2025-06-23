@@ -1,0 +1,7 @@
+# fill the blanks below and rename this file to .env for docker to parse it
+# it must be in the same folder as the docker-compose file
+LDCS_RUCIO_FQDN=
+POSTGRES_USER=
+POSTGRES_DB=
+POSTGRES_PASSWORD=
+

@@ -253,6 +253,7 @@ p.sequence.extend([digiTagger, digiRecoil,
                 tracking_tagger, tracking_recoil] )
 
 
+# NOTE for the future: add a keep for tracker digis or rename them to not get dropped along with simhits 
 p.keep = [ "drop MagnetScoringPlaneHits", "drop TrackerScoringPlaneHits", "drop HcalScoringPlaneHits", "drop .*SimHits.*"]
 p.outputFiles=["simoutput.root"]
 

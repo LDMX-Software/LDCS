@@ -87,7 +87,6 @@ fi
 echo -e "\nSingularity exited normally, proceeding with post-processing...\n"
 
 echo -e "First collect image dependency metadata"
-#singularity inspect --json --labels --environment ${image} > apptainerInspectOutput.json
 singularity inspect --json --labels ${image} > apptainerInspectOutput.json
 
 #allow for the previous step to fail 
@@ -103,7 +102,8 @@ fi
 # Post processing to extract metadata for rucio
 # for now, sinuglarity is not passing on docker metadata, so we're not using that functionality 
 #eval $( python3 ldmx-simprod-rte-helper.py  --makeImage -c ldmxproduction.config -a ${imageMeta} collect-image-metadata )
-eval $( python3 ldmx-simprod-rte-helper.py  --makeImage --debugLevel DEBUG -c ldmxproduction.config collect-image-metadata )
+#eval $( python3 ldmx-simprod-rte-helper.py -j rucio.metadata -c ldmxproduction.config  collect-metadata ) #for regular jobs 
+eval $( python3 ldmx-simprod-rte-helper.py  --makeImage --debugLevel DEBUG  -j rucio.metadata -c ldmxproduction.config collect-image-metadata )
 if [ ! -z "$KEEP_LOCAL_COPY" ]; then
   if [ -z "$FINALOUTPUTFILE" ]; then
     echo "Post-processing script failed!"

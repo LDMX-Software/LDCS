@@ -1,0 +1,17 @@
+modules:
+    app:
+        - act.ldmx
+
+jobs:
+    bufferdir: /home/almalinux/act/bufferdir
+
+executable:
+    wrapper: /home/almalinux/LDCS/helperScripts/ldmxsim.sh
+    ruciohelper: /home/almalinux/LDCS/helperScripts/ldmx-simprod-rte-helper.py
+    simprodrte: LDMX-SIMPROD-3.0
+
+joblog:
+    urlprefix: http://act-ldmx2.cern-test.uiocloud.no/jobs
+    dir: /act_logs/www/html/jobs
+    keepsuccessful: 1
+

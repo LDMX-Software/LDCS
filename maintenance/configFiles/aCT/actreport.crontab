@@ -1,0 +1,3 @@
+# Scheduled generation of actreport for web publishing
+* * * * * source /home/almalinux/act/bin/activate; actreport --web /act_logs/www/html/aCTReport.html 2>&1
+

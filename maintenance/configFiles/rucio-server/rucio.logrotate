@@ -1,0 +1,19 @@
+# Copy this file in the system as /etc/logrotate.d/rucio
+# Default paths as in the provided rucio.cfg are used
+# If you change rucio.cfg you must also change this file
+/var/log/rucio/*.log
+/var/log/rucio/httpd/*_log {
+    weekly
+    missingok
+    notifempty
+    sharedscripts
+    rotate 5
+    compress
+    delaycompress
+    prerotate
+      docker compose -f /home/almalinux/LDCS-rucio/docker-compose-rucioserver-postgres-daemons.yml down
+    endscript
+    postrotate
+       docker compose -f /home/almalinux/LDCS-rucio/docker-compose-rucioserver-postgres-daemons.yml up -d
+    endscript
+}

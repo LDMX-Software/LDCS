@@ -1,0 +1,86 @@
+db:
+    host: 127.0.0.1
+    port: 3306
+    name: act
+    type: mysql
+    user: actuser
+    pass: ***CHANGETHIS***
+
+sites:
+    Lund:
+        rse: LUND
+        maxjobs: 29
+        status: online
+        endpoint: https://l-pilot2.lunarc.lu.se/lu48
+    Lund2:
+        rse: LUND2
+        maxjobs: 49
+        status: offline
+        endpoint: https://l-pilot2.lunarc.lu.se/hep
+    Caltech:
+        rse: CALTECH
+        maxjobs: 15
+        status: offline
+        endpoint: https://axion.hep.caltech.edu/SL7
+    UCSB:
+        rse: UCSB
+        maxjobs: 29
+        status: offline
+        endpoint: https://ldmx.cnsi.ucsb.edu/batch
+    SLAC:
+        rse: SLAC
+        maxjobs: 75
+        status: offline
+        endpoint: https://arcce1.slac.stanford.edu:9443/ldmx
+
+# Temporarily commented out until we understand how this is 
+# Supposed to work
+#monitor:
+#   prometheusport: 9101
+    # TODO: open this port on act-ruciodb2?
+    #    rucioprometheusport: 9102
+
+periodicrestart:
+    actsubmitter: 120
+    actstatus: 300
+    actfetcher: 300
+    actcleaner: 300
+
+tmp:
+    dir: /home/almalinux/act/tmp
+
+actlocation:
+    dir: /home/almalinux/act/lib/python3.9/site-packages
+    pidfile: /home/almalinux/act/act.pid
+
+logger:
+    level: debug
+    arclevel: debug
+    logdir: /home/almalinux/act/log
+    rotate: 5
+
+jobs:
+    queuefraction: 0.5
+    queueoffset: 200
+    checkinterval: 30
+    checkmintime: 20
+
+voms:
+    bindir: /usr/bin
+    proxylifetime: 354600
+    minlifetime: 259200
+    proxypath: /home/almalinux/act/ldmx.long.proxy
+    cacertdir: /etc/grid-security/certificates
+    proxystoredir: /home/almalinux/act/proxies
+
+errors:
+    toresubmit:
+        arcerrors:
+            - "hello i'm an error message that never occurs, keep me if you want to remove all others"
+            - "Job submission to LRMS failed"
+            - "LRMS error: (271) job killed: wall"
+            - "LRMS error: (271) Job was cancelled"
+            - "stage 2 execution failed"
+            - "LRMS error: (1*)"
+            - "LRMS error: (-1)"
+

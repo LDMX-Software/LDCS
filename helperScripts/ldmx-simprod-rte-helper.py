@@ -10,6 +10,9 @@ import hashlib
 import zlib
 import time
 
+#json parsing is in a separate file 
+from parseJSON import build_record_from_inputs, flatten_json, make_record
+
 # logging
 logger = logging.getLogger('LDMX.SimProd.Helper')
 logger.setLevel(logging.INFO)
@@ -154,259 +157,41 @@ def collect_from_json( infile, in_conf ):
     logger.info('Opened {}'.format(infile))
     logger.debug(json.dumps(mjson, indent = 2, sort_keys=True ))
 
-    if 'generators' in mjson['sequence'][0] :
-        config_dict['GunPositionX[mm]']  = mjson['sequence'][0]['generators'][0]['position'][0] if 'position' in mjson['sequence'][0]['generators'][0] else None
-        config_dict['GunPositionY[mm]']  = mjson['sequence'][0]['generators'][0]['position'][1] if 'position' in mjson['sequence'][0]['generators'][0] else None
-        config_dict['GunPositionZ[mm]']  = mjson['sequence'][0]['generators'][0]['position'][2] if 'position' in mjson['sequence'][0]['generators'][0] else None
-        config_dict['MomentumVectorX[GeV]'] = mjson['sequence'][0]['generators'][0]['direction'][0] if 'direction' in mjson['sequence'][0]['generators'][0] else None
-        config_dict['MomentumVectorY[GeV]'] = mjson['sequence'][0]['generators'][0]['direction'][1] if 'direction' in mjson['sequence'][0]['generators'][0] else None
-        config_dict['MomentumVectorZ[GeV]'] = mjson['sequence'][0]['generators'][0]['direction'][2] if 'direction' in mjson['sequence'][0]['generators'][0] else None
-        config_dict['BeamEnergy']    = mjson['sequence'][0]['generators'][0]['energy']  if 'energy' in mjson['sequence'][0]['generators'][0] else None
-        config_dict['BeamParticle']  = mjson['sequence'][0]['generators'][0]['particle'] if 'particle' in mjson['sequence'][0]['generators'][0] else None
-        #or, if we're using the multiparticle gun, which has different names and conventions for the same parameters
-        if not config_dict['GunPositionX[mm]'] :
-            config_dict['GunPositionX[mm]']  = mjson['sequence'][0]['generators'][0]['vertex'][0] if 'vertex' in mjson['sequence'][0]['generators'][0] else None
-            config_dict['GunPositionY[mm]']  = mjson['sequence'][0]['generators'][0]['vertex'][1] if 'vertex' in mjson['sequence'][0]['generators'][0] else None
-            config_dict['GunPositionZ[mm]']  = mjson['sequence'][0]['generators'][0]['vertex'][2] if 'vertex' in mjson['sequence'][0]['generators'][0] else None
-        if not config_dict['MomentumVectorX[GeV]'] :
-            config_dict['MomentumVectorX[GeV]'] = mjson['sequence'][0]['generators'][0]['momentum'][0] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
-            config_dict['MomentumVectorY[GeV]'] = mjson['sequence'][0]['generators'][0]['momentum'][1] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
-            config_dict['MomentumVectorZ[GeV]'] = mjson['sequence'][0]['generators'][0]['momentum'][2] if 'momentum' in mjson['sequence'][0]['generators'][0] else None
-        if not config_dict['BeamEnergy'] :   #preferred choice is to extract the beam energy from the numbers used, rather than pull it from the batch config which doesn't explicitly set it, and could thus be wrong
-            px = float( str(config_dict['MomentumVectorX[GeV]']) )
-            py = float( str(config_dict['MomentumVectorY[GeV]']) )
-            pz = float( str(config_dict['MomentumVectorZ[GeV]']) )   #config_dict['MomentumVectorZ'])
-            import math
-            energy = int( math.sqrt( px*px + py*py + pz*pz ) + 0.5 )
-            # now use this to normalise the momentum vector
-            config_dict['MomentumVectorX[GeV]'] = px/energy
-            config_dict['MomentumVectorY[GeV]'] = py/energy
-            config_dict['MomentumVectorZ[GeV]'] = pz/energy
-            #and then set the beam energy. first get the units right
-            while energy > 999 :
-                energy = energy/1000.
-                
-            config_dict['BeamEnergy'] = energy
-        if not config_dict['BeamParticle'] :
-            config_dict['BeamParticle']  = mjson['sequence'][0]['generators'][0]['pdgID'] if 'pdgID' in mjson['sequence'][0]['generators'][0] else None
-        #note: defaults to 1, rather than "None"
-        config_dict['nBeamParticles']  = mjson['sequence'][0]['generators'][0]['nParticles'] if 'nParticles' in mjson['sequence'][0]['generators'][0] else 1
-            
-        
-    if 'beamSpotSmear' in mjson['sequence'][0] :
-        config_dict['BeamSpotSizeX[mm]'] = mjson['sequence'][0]['beamSpotSmear'][0]
-        config_dict['BeamSpotSizeY[mm]'] = mjson['sequence'][0]['beamSpotSmear'][1]
-        config_dict['BeamSpotSizeZ[mm]'] = mjson['sequence'][0]['beamSpotSmear'][2]
-
-    if 'runNumber' in mjson['sequence'][0] :
-        config_dict['RunNumber'] = mjson['sequence'][0]['runNumber']
-    elif 'run' in mjson :
-        config_dict['RunNumber'] = mjson['run']
-    else :
-        logger.error('RunNumber is not set in %s. Job aborted.', infile)
-        sys.exit(1)
-
-    if 'randomSeeds' in mjson['sequence'][0] :
-        config_dict['RandomSeed1'] = mjson['sequence'][0]['randomSeeds'][0]
-        config_dict['RandomSeed2'] = mjson['sequence'][0]['randomSeeds'][1]
-#    else :   
-# should probably first look up if we're using an input file, or if we can find a master random seed, and only in those cases accept not having a random seed specified.     
-#        logger.error('RandomSeed1 and/or RandomSeed2 is not set in %s. Job aborted.', infile)
-#        sys.exit(1)
-
-    if 'actions' in mjson['sequence'][0] :
-        for params in mjson['sequence'][0]['actions'] :
-            p = params['class_name']
-            key=p.split("::")[-1]  #these can be long :: separated name spaces and class names; get the last 
-            for k, val in params.items() :
-                if 'threshold' in k :
-                    keepKey=key+"_"+k+'[MeV]'
-                    config_dict[keepKey]=val
-
-    #don't attempt setting these if we're actually using a sim input file)
-    if not 'inputFiles' in mjson or mjson['inputFiles'] == [] : #in_conf.get("InputFile") : <-- adjust this; LHE files are passed as "InputFile"s but not as "p.inputFiles"
-        if 'biasing_operators' in  mjson['sequence'][0] :
-            for params in mjson['sequence'][0]['biasing_operators'] :
-                p = params['class_name']
-                key="Geant4Bias"+p.split("::")[-1]  #these can be long :: separated name spaces and class names; get the last
-                for k, val in params.items() :
-                    if '_name' in k :
-                        continue
-                    keepKey=key+"_"+k
-                    if 'threshold' in k : # or 'factor' in k :
-                        keepKey=keepKey+'[MeV]'
-                    config_dict[keepKey]=val
-        elif 'biasing_particle' in  mjson['sequence'][0] :
-            config_dict['Geant4BiasParticle']  = mjson['sequence'][0]['biasing_particle'] if 'biasing_particle' in  mjson['sequence'][0] else None
-            config_dict['Geant4BiasProcess']   = mjson['sequence'][0]['biasing_process'] if 'biasing_process' in  mjson['sequence'][0] else None
-            config_dict['Geant4BiasVolume']    = mjson['sequence'][0]['biasing_volume'] if 'biasing_volume' in  mjson['sequence'][0] else None
-            config_dict['Geant4BiasThreshold[MeV]'] = mjson['sequence'][0]['biasing_threshold'] if 'biasing_threshold' in  mjson['sequence'][0] else None
-            config_dict['Geant4BiasFactor']    = mjson['sequence'][0]['biasing_factor'] if 'biasing_factor' in  mjson['sequence'][0] else None
-            
-        config_dict['APrimeMass']          = mjson['sequence'][0]['APrimeMass'] if 'APrimeMass' in  mjson['sequence'][0] else None
-            #let these depend on if we are actually generating signal 
-        if 'dark_brem' in  mjson['sequence'][0] :
-            config_dict['APrimeMass[MeV]']       = mjson['sequence'][0]['dark_brem']['ap_mass'] 
-            config_dict['DarkBremModel']          = mjson['sequence'][0]['dark_brem']['model']['name'] 
-            if not config_dict['DarkBremModel'] == "UNDEFINED" :
-                config_dict['DarkBremMethod']         = mjson['sequence'][0]['dark_brem']['model']['method'] 
-                config_dict['DarkBremEpsilon']        = mjson['sequence'][0]['dark_brem']['model']['epsilon'] 
-                config_dict['DarkBremThreshold[GeV]'] = mjson['sequence'][0]['dark_brem']['model']['threshold'] 
-            config_dict['DarkBremOnePerEvent']    = mjson['sequence'][0]['dark_brem']['only_one_per_event'] 
-
-        config_dict['DarkBremMethodXsecFactor'] = mjson['sequence'][0]['darkbrem_globalxsecfactor'] if config_dict['APrimeMass'] and 'darkbrem_globalxsecfactor' in  mjson['sequence'][0] else None
     
-    #ok. over reco stuff, where parameter names can get confusing.
-    # add here as more processors are included
-    # not putting in protections here for every possible parameter name, better to let a test job fail if the parameter naming has changed
+    # once we have parsed the arc job config, we should parse the ldmx-sw parameter dump and add it to the dict
 
+    #######-------------------------------------#########
+    #######-------------------------------------#########
+    # insert new parsing method here 
+    #
+    #
+    # this means: pass some jsons to the json recursing parser fct
+    # and populate the metadata dict that way
+    # the parameter dump out from the job only contains ldmx-sw parameter settings 
+    # --> make sure that stuff from batch configs, and ARC metadata such as walltime
+    # or site, and booleans such as isTriggerSkim or isRecon are still added 
+    #######-------------------------------------#########
+    #######-------------------------------------#########
+
+    #we basically need 
+
+    
+    
+    
     isRecon = False #allow for checking this from parameter dump, if one exists
+    # put some logic in here for isRecon, or, from now on enforce that it's set in the
+    # job submission config 
     for seq in mjson['sequence'] :
         procName=seq['className'].split('::')[1]  #remove namespace 
         if procName != "Simulator" :  #everything except simulation is reconstruction
             isRecon = True 
-#            procName=procName.replace("ldmx::", "")
-            procName=procName.replace("Producer", "")
-            procName=procName.replace("Processor", "")
-        if "calDigi" in procName and 'hgcroc' in seq :
-            if procName == "HcalDigi" :
-                config_dict[procName+'Gain'] = seq['avgGain']
-                config_dict[procName+'AttLength'] = seq['attenuationLength']
-            config_dict[procName+'MeV'] = seq['MeV']
-            config_dict[procName+'Pedestal'] = seq['avgPedestal']
-            config_dict[procName+'ReadoutThreshold'] = seq['avgReadoutThreshold']
-            #now read the stuff from the actual hgcroc entry 
-            config_dict[procName+'ClockCycle[ns]'] = seq['hgcroc']['clockCycle']
-            config_dict[procName+'ISOI'] = seq['hgcroc']['iSOI']
-            config_dict[procName+'NumberADCs'] = seq['hgcroc']['nADCs']
-            #config_dict[procName+'MaxADCrange'] = seq['hgcroc']['maxADCRange']
-            #config_dict[procName+'NoiseRMS'] = seq['hgcroc']['noiseRMS']
-            config_dict[procName+'NoiseRMS'] = seq['avgNoiseRMS']
-            config_dict[procName+'WithNoise'] = seq['hgcroc']['noise']
-            config_dict[procName+'TimingJitter'] = seq['hgcroc']['timingJitter']
-            #config_dict[procName+'PadCapacitance'] = seq['hgcroc']['readoutPadCapacitance']
-            #config_dict[procName+'TOAThreshold'] = seq['hgcroc']['toaThreshold']
-            #config_dict[procName+'TOTThreshold'] = seq['hgcroc']['totThreshold']
-            #config_dict[procName+'TOTMax'] = seq['hgcroc']['totMax']
-            config_dict[procName+'RateUpSlope'] = seq['hgcroc']['rateUpSlope']
-            config_dict[procName+'RateDnSlope'] = seq['hgcroc']['rateDnSlope']
-            config_dict[procName+'TimeUpSlope'] = seq['hgcroc']['timeUpSlope']
-            config_dict[procName+'TimeDnSlope'] = seq['hgcroc']['timeDnSlope']
-            config_dict[procName+'TimePeak'] = seq['hgcroc']['timePeak']
-            #config_dict[procName+'DrainRate'] = seq['hgcroc']['drainRate']
-        elif procName == "EcalRec" :
-            config_dict[procName+'SecondOrderEnergyCorrection'] = seq['secondOrderEnergyCorrection']
-            config_dict[procName+'ChargePerMIP'] = seq['charge_per_mip']
-            config_dict[procName+'SiEnergyMIP'] = seq['mip_si_energy']
-            config_dict[procName+'ClockCycle[ns]'] = seq['clock_cycle']
-        elif procName == "EcalVeto" :
-            config_dict[procName+'Layers'] = seq['num_ecal_layers']
-            config_dict[procName+'DiscriminatorCut'] = seq['disc_cut']
-            config_dict[procName+'BDTfile'] = seq['bdt_file']
-            config_dict[procName+'DoBDT'] = seq['do_bdt']
-        elif procName == "HcalVeto" :
-            config_dict[procName+'MaxPE'] = seq['pe_threshold']
-            config_dict[procName+'MaxTime[ns]'] = seq['max_time']
-            config_dict[procName+'BackMinPE'] = seq['back_min_pe']
-            if 'max_depth' in seq : #removed starting from v3.3.3
-                config_dict[procName+'MaxDepth[mm]'] = seq['max_depth']
-        elif procName == "HcalRec" :
-            config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
-            config_dict[procName+'VoltagePerMIP'] = seq['voltage_per_mip']
-            config_dict[procName+'EnergyMIP'] = seq['mip_energy']
-            config_dict[procName+'ClockCycle[ns]'] = seq['clock_cycle']
-            config_dict[procName+'AvgTOAThreshold'] = seq['avgToaThreshold']             
-        elif procName == "HcalDigi" :   #keep for backwards compatibility for the no-hgcroc versions (<v3.0)
-            config_dict[procName+'MeanNoiseSiPM'] = seq['meanNoise']
-            config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']
-            config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
-            config_dict[procName+'AttLength[m]'] = seq['strip_attenuation_length']
-            config_dict[procName+'PosResolution[mm]'] = seq['strip_position_resolution']
-        elif procName == "Overlay" :
-            config_dict[procName+'BunchSpacing[ns]'] = seq['bunchSpacing']
-            config_dict[procName+'DoPoissonIntime'] = seq['doPoissonIntime']
-            config_dict[procName+'DoPoissonOutoftime'] = seq['doPoissonOutoftime']
-            config_dict[procName+'NumberEarlierBunchesToSample'] = seq['nEarlierBunchesToSample']
-            config_dict[procName+'NumberLaterBunchesToSample'] = seq['nLaterBunchesToSample']
-            config_dict[procName+'TimeMean[ns]'] = seq['timeMean']
-            config_dict[procName+'TimeSpread[ns]'] = seq['timeSpread']
-            config_dict[procName+'TotalNumberOfInteractions'] = seq['totalNumberOfInteractions']
-        elif procName == "TrigScintDigi" :
-            config_dict[procName+'MeanNoiseSiPM'] = seq['mean_noise']
-            config_dict[procName+'MeVPerMIP'] = seq['mev_per_mip']
-            config_dict[procName+'PEPerMIP'] = seq['pe_per_mip']
-        elif procName == "TrigScintCluster" :
-            config_dict[procName+'MaxWidth'] = seq['max_cluster_width']
-            config_dict[procName+'SeedThreshold'] = seq['seed_threshold']
-            config_dict[procName+'MinThreshold'] = seq['clustering_threshold']
-            config_dict[procName+'InputPassName'] = seq['input_pass_name']
-        elif procName == "TrigScintTrack" :
-            config_dict[procName+'MaxDelta'] = seq['delta_max']
-            config_dict[procName+'SeedingCollection'] = seq['seeding_collection']
-            config_dict[procName+'MinThreshold'] = seq['tracking_threshold']
-            config_dict[procName+'InputPassName'] = seq['input_pass_name']
-        elif procName == "TrackerHitKiller" :
-            config_dict[procName+'Efficiency'] = seq['hitEfficiency']
-        elif procName == "Trigger" and not "dqm" in seq['className'].split('::')[0] :
-            if 'thresholds' in seq :
-                config_dict[procName+'MaxEnergy[MeV]'] = seq['thresholds']
-            else :
-                config_dict[procName+'MaxEnergy[MeV]'] = seq['threshold']
-            config_dict[procName+'EcalEndLayer'] = seq['end_layer']
-            config_dict[procName+'EcalStartLayer'] = seq['start_layer']
-        elif procName == "ElectronCounter" :
-            if  seq['use_simulated_electron_number']:
-                config_dict[procName+'UseSimElectronNb'] = True
-                config_dict[procName+'InputColl'] = None
-            else :
-                config_dict[procName+'UseSimElectronNb'] = False
-                config_dict[procName+'InputColl'] = seq['input_collection']+'_'+seq['input_pass_name']
-            config_dict[procName+'SimElectronNb'] = seq['simulated_electron_number']
-        elif procName == "FindableTrack" :
-            config_dict[procName+'WasRun'] = 1
-        elif procName == "TrackerVeto" :
-            config_dict[procName+'WasRun'] = 1
 
     det = 'v{DetectorVersion}'.format(**in_conf)
-    for cond in mjson['conditionsObjectProviders'] :
-        if "RandomNumberSeedService" in cond['className'] :
-            config_dict['RandomNumberSeedMode'] = cond['seedMode']
-            config_dict['RandomNumberSeed'] = cond['seed']
-        elif "Geometry" in cond['className'] :
-            #print("Looking in "+cond['className'])
-            #condName=cond['className'].split("::")[1]
-            condName=cond['objectName']
-#            condName=condName.replace("ldmx::", "")
-            condName=condName.replace("Provider", "")#"HexReadout")
-            #print("Using condName "+condName)
-            if 'EcalHexReadout' in cond :
-                config_dict[condName+'Gap[mm]'] = cond['EcalHexReadout'][det]['gap']
-                config_dict[condName+'ModuleMinR[mm]'] = cond['EcalHexReadout'][det]['moduleMinR']
-                config_dict[condName+'FrontZ[mm]'] = cond['EcalHexReadout'][det]['ecalFrontZ']
-                config_dict[condName+'NumberCellRHeight[mm]'] = cond['EcalHexReadout'][det]['nCellRHeight']
-            elif 'HcalGeometry' in cond and det in cond['HcalGeometry'] : 
-                config_dict[condName+'ThicknessScint[mm]'] = cond['HcalGeometry'][det]['scint_thickness']
-                config_dict[condName+'WidthScint[mm]'] = cond['HcalGeometry'][det]['scint_width']
-                config_dict[condName+'EcalDx'] = cond['HcalGeometry'][det]['ecal_dx']
-                config_dict[condName+'EcalDy'] = cond['HcalGeometry'][det]['ecal_dy']
-                config_dict[condName+'NumSections'] = cond['HcalGeometry'][det]['num_sections']
-
-                
-        elif "conditions" in cond['className'] :
-            if 'columns' in cond : 
-                condName=cond['objectName']
-                for col in range(len(cond['columns'])) :
-                    config_dict[condName+'_'+cond['columns'][col]]=cond['entries'][0]["values"][col]
 
     config_dict['IsRecon'] = isRecon
 
-    config_dict['ROOTCompressionSetting'] = mjson['compressionSetting'] if 'compressionSetting' in mjson else None 
-    config_dict['PassName'] = mjson['passName']
 
-    if 'maxEvents' in mjson and mjson['maxEvents'] > -1 :
-        config_dict['NumberOfEvents'] = mjson['maxEvents']
-        #otherwise we are most definitely using an input file and the number from there should be kept 
-
+    
     logger.debug(json.dumps(config_dict, indent = 2, sort_keys=True ))
     return config_dict
 
